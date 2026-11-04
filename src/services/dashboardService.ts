@@ -1,13 +1,4 @@
-// Importa o Axios para requisições HTTP
-import axios from 'axios';
-
-// Cria instância do Axios com baseURL e headers padrão
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+import { api } from './api';
 
 // Tipos das respostas dos endpoints do dashboard
 export interface IndicatorResponse {

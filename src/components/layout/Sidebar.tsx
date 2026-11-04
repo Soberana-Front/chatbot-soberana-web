@@ -1,7 +1,6 @@
 // Importa componente de navegação do React Router
-import { NavLink } from 'react-router'
-// Importa serviço de autenticação para logout
-import { authService } from '../../services/authService'
+import { NavLink, useNavigate } from 'react-router'
+import { useAuth } from '../../contexts/AuthContext'
 // Importa ícones da navegação
 import {
   BarChart3,
@@ -55,6 +54,8 @@ const navigationItems = [
 
 // Componente da barra lateral com navegação e logout
 export function Sidebar() {
+  const { logout } = useAuth()
+  const navigate = useNavigate()
   return (
     <aside className="sidebar-container">
       {/* Logo da aplicação */}
@@ -90,7 +91,7 @@ export function Sidebar() {
       <div className="sidebar-logout">
         <button
           type="button"
-          onClick={() => authService.logout()}
+          onClick={() => { logout(); navigate('/login') }}
           className="sidebar-logout-btn"
         >
           <LogOut size={16} strokeWidth={1.8} />

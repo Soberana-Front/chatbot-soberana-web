@@ -6,6 +6,6 @@ dist
 .DS_Store
 .vite
 *.md
-
+!README.md
 # Tipos gerados continuam versionados.
 !src/api/generated/schema.d.ts

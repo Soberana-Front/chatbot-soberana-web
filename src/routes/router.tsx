@@ -35,6 +35,7 @@ import NewPricingPage from "../pages/NewPricingPage/NewPricingPage";
 
 // Importa página de detalhes da precificação
 import PricingDetail from "../pages/PricingDetail/PricingDetail";
+import { DashboardLayout } from '../components/dashboard/DashboardLayout/DashboardLayout';
 
 // Importa página de comparação
 import ComparisonPage from "../pages/ComparisonPage/ComparisonPage";
@@ -47,6 +48,8 @@ import { ChangePasswordPage } from "../pages/ChangePasswordPage/ChangePasswordPa
 
 // Importa página de configurações (Issue #93)
 import { SettingsPage } from "../pages/SettingsPage/SettingsPage";
+import { ForbiddenPage } from '../pages/forbidden-page';
+import { NotFoundPage } from '../pages/not-found-page';
 
 /* virou uma página própria, então não precisa mais desse componente genérico
 const Historico = () => (
@@ -110,7 +113,7 @@ export const router = createBrowserRouter([
       { path: "precificacao/nova", element: <NewPricingPage /> },
 
       // Detalhamento da Precificação
-      { path: "precificacao/:id", element: <PricingDetail /> },
+      { path: "precificacao/:id", element: <DashboardLayout><PricingDetail /></DashboardLayout> },
 
       // 👇 Comparações FORA do Layout (a página já tem DashboardLayout)
       { path: "comparacoes", element: <ComparisonPage /> },
@@ -136,8 +139,12 @@ export const router = createBrowserRouter([
   },
 
   {
+    path: '403',
+    element: <ForbiddenPage />,
+  },
+  {
     // Rota 404
     path: "*",
-    element: <div className="p-4">Página não encontrada</div>,
+    element: <NotFoundPage />,
   },
 ]);

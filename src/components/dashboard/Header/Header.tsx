@@ -3,11 +3,23 @@
  * ======================================== */
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { Bell } from 'lucide-react';
 
 import { useAuth } from '../../../contexts/AuthContext';
 import { authService } from '../../../services/authService';
+import { PageHeader } from '../../layout/PageHeader';
+
+const pageNames: Record<string, string> = {
+  dashboard: 'Dashboard',
+  clinicas: 'Clínicas',
+  procedimentos: 'Procedimentos',
+  comparacoes: 'Comparações',
+  historico: 'Histórico',
+  perfil: 'Perfil',
+  configuracoes: 'Configurações',
+  precificacao: 'Precificação',
+};
 
 /* ========================================
  * UTILITÁRIO: GERAR INICIAIS DO NOME
@@ -30,6 +42,21 @@ const getInitials = (name: string) => {
 export default function DashboardHeader() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const segments = pathname.split('/').filter(Boolean);
+  const current = segments.at(-1) ?? 'dashboard';
+  const title = current === 'nova' ? 'Nova precificação'
+    : current === 'alterar-senha' ? 'Alterar senha'
+    : pageNames[current] ?? (segments[0] === 'historico' ? 'Detalhe do histórico' : 'Detalhe da precificação');
+  const breadcrumbs = segments.length > 1 || current !== 'dashboard'
+    ? [
+        { label: 'Dashboard', href: '/dashboard' },
+        ...segments.map((segment, index) => ({
+          label: index === segments.length - 1 ? title : pageNames[segment] ?? segment,
+          href: index === segments.length - 1 ? undefined : `/${segments.slice(0, index + 1).join('/')}`,
+        })),
+      ]
+    : [];
 
   const userName = user?.name ?? 'Doutor(a)';
   const userInitials = user?.name ? getInitials(user.name) : 'DR';
@@ -49,15 +76,7 @@ export default function DashboardHeader() {
   return (
     <header className="dashboard-header">
       {/* ===== LADO ESQUERDO ===== */}
-      <div>
-        <h1 className="dashboard-header-title">
-          Dashboard
-        </h1>
-
-        <p className="dashboard-header-subtitle">
-          Precifique seus procedimentos com precisão
-        </p>
-      </div>
+      <PageHeader title={title} subtitle={current === 'dashboard' ? 'Precifique seus procedimentos com precisão' : undefined} breadcrumbs={breadcrumbs} />
 
       {/* ===== LADO DIREITO ===== */}
       <div className="dashboard-header-actions">

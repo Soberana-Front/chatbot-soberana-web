@@ -356,7 +356,7 @@ export const PricingDetail: React.FC =
 
     if (isLoading) {
       return (
-        <main className="pricing-detail">
+        <div className="pricing-detail">
           <div className="pricing-detail__loading">
             <Loader2 className="pricing-detail__loading-icon" />
 
@@ -364,7 +364,7 @@ export const PricingDetail: React.FC =
               Carregando precificação...
             </span>
           </div>
-        </main>
+        </div>
       )
     }
 
@@ -373,7 +373,7 @@ export const PricingDetail: React.FC =
     // ========================================================
 
     return (
-      <main className="pricing-detail">
+      <div className="pricing-detail">
         <div className="pricing-detail__container">
 
           {/* ================================================
@@ -726,7 +726,7 @@ export const PricingDetail: React.FC =
           </section>
 
         </div>
-      </main>
+      </div>
     )
   }
 

@@ -1,52 +1,25 @@
 // Importa instância do Axios
 import { api } from './api';
+import type { paths } from '../api/generated/schema';
+
+type LoginRoute = paths['/api/auth/login']['post'];
+type RegisterRoute = paths['/api/auth/register']['post'];
+type RegisterRequest = RegisterRoute['requestBody']['content']['application/json'];
 
 // Credenciais para login
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
+export type LoginCredentials = LoginRoute['requestBody']['content']['application/json'];
 
 // Dados para registro de usuário
-export interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-  passwordConfirmation?: string;
+export type RegisterData = Omit<RegisterRequest, 'termsAccepted' | 'privacyPolicyAccepted'> & {
   termsAccepted: boolean;
   privacyPolicyAccepted: boolean;
-  phone: string;
-  cpf: string;
-  userType: 'student' | 'professional' | null;
-  cro?: string;
-  settings?: {
-    currency: string;
-    profitMargin: number;
-    taxRate: number;
-    cardFee: number;
-  };
-}
+};
 
 // Resposta padrão da API de autenticação
-export interface AuthResponse {
-  success: boolean;
-  data: {
-    user: {
-      id: string;
-      name: string;
-      email: string;
-    };
-    token: string;
-  };
-  message?: string;
-}
+export type AuthResponse = LoginRoute['responses'][200]['content']['application/json'];
 
 // Dados do usuário logado
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-}
+export type User = AuthResponse['data']['user'];
 
 // Serviço de autenticação com todos os métodos da API
 export const authService = {
@@ -58,7 +31,11 @@ export const authService = {
 
   // Registro: cria novo usuário com dados completos
   async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/register', data);
+    if (!data.termsAccepted || !data.privacyPolicyAccepted) {
+      throw new Error('Aceite os Termos de Uso e a Política de Privacidade para continuar');
+    }
+    const payload: RegisterRequest = { ...data, termsAccepted: true, privacyPolicyAccepted: true };
+    const response = await api.post<AuthResponse>('/auth/register', payload);
     return response.data;
   },
 

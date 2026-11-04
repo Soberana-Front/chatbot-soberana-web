@@ -33,7 +33,7 @@ export const EmptyState = ({
   const showAction = Boolean(actionLabel && onAction)
 
   return (
-    <div className="empty-state-container">
+    <div className="empty-state-container" role="status">
       <Icon className="empty-state-icon" strokeWidth={1.5} />
       <p className="empty-state-title">{title}</p>
       <p className="empty-state-subtitle">{subtitle}</p>

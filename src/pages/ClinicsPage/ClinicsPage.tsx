@@ -8,6 +8,7 @@ import { Pagination } from '../../components/ui/Pagination'
 import { ClinicTable } from '../../components/ui/ClinicTable'
 import { ClinicModal } from '../../components/ui/ClinicModal'
 import { Button } from '../../components/ui/Button'
+import { ErrorState } from '../../components/ui/AsyncStates'
 // Importa o hook de estado de clínicas (Issue #50)
 import { useClinics } from '../../hooks/useClinics'
 import type { Clinic } from '../../services/clinicService'
@@ -120,7 +121,7 @@ export const ClinicsPage = () => {
         </div>
 
         {/* Mensagem de erro (ex: falha ao criar/editar/excluir) */}
-        {error && <p className="clinics-page-error">{error}</p>}
+        {error && <ErrorState message={error} />}
 
         {/* Tabela com dados mockados/paginados (Issue #48) */}
         <ClinicTable

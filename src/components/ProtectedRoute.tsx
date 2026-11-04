@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router';
 // Importa hook de autenticação
 import { useAuth } from '../contexts/AuthContext';
 // Importa componente de loading
-import { Spinner } from './ui/Spinner';
+import { LoadingState } from './ui/AsyncStates';
 
 
 // Componente que protege rotas privadas
@@ -15,16 +15,12 @@ export const ProtectedRoute = () => {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Spinner size="lg" />
+        <LoadingState label="Verificando sessão..." />
       </div>
     );
   }
-
-
-  
-  // Redireciona para login se não autenticado
- 
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   // Renderiza as rotas filhas (conteúdo protegido)
   return <Outlet />;
-}; 
+};
