@@ -20,6 +20,8 @@ export const registerSchema = z
     userType: z.enum(['student', 'professional']).nullable(),
     password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
     passwordConfirmation: z.string().min(6, 'Confirme sua senha'),
+    termsAccepted: z.boolean().refine((accepted) => accepted, 'Aceite os Termos de Uso para continuar'),
+    privacyPolicyAccepted: z.boolean().refine((accepted) => accepted, 'Aceite a Política de Privacidade para continuar'),
   })
   .refine((data) => data.password === data.passwordConfirmation, {
     message: 'As senhas não coincidem',

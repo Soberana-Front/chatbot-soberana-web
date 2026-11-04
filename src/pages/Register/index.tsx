@@ -41,6 +41,8 @@ const Register = () => {
       userType: null,
       password: '',
       passwordConfirmation: '',
+      termsAccepted: false,
+      privacyPolicyAccepted: false,
     },
   });
 
@@ -62,7 +64,7 @@ const Register = () => {
     if (currentStep === 0) {
       fieldsToValidate = ['name', 'email', 'phone', 'cpf', 'userType'];
     } else if (currentStep === 1) {
-      fieldsToValidate = ['password', 'passwordConfirmation'];
+      fieldsToValidate = ['password', 'passwordConfirmation', 'termsAccepted', 'privacyPolicyAccepted'];
     }
 
     const isValid = await trigger(fieldsToValidate);
@@ -95,8 +97,8 @@ const Register = () => {
     // Chama serviço de registro e redireciona para login em caso de sucesso
     registerUser(payload)
       .then(() => { 
-        showToast('Conta criada com sucesso! Faça login para acessar o sistema.', 'success');
-        navigate('/login');
+        showToast('Conta criada com sucesso!', 'success');
+        navigate('/dashboard');
       })
       .catch((err: any) => {
       showToast(err.message || 'Erro ao criar conta. Tente novamente.', 'error');
@@ -161,6 +163,16 @@ const Register = () => {
                 required
                 {...register('passwordConfirmation')}
               />
+              <label className="register-consent">
+                <input type="checkbox" {...register('termsAccepted')} />
+                Li e aceito os Termos de Uso.
+              </label>
+              {errors.termsAccepted && <p className="field-error">{errors.termsAccepted.message}</p>}
+              <label className="register-consent">
+                <input type="checkbox" {...register('privacyPolicyAccepted')} />
+                Li e aceito a Política de Privacidade.
+              </label>
+              {errors.privacyPolicyAccepted && <p className="field-error">{errors.privacyPolicyAccepted.message}</p>}
             </div>
           )}
 

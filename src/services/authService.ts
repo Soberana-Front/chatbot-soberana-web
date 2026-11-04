@@ -13,6 +13,8 @@ export interface RegisterData {
   email: string;
   password: string;
   passwordConfirmation?: string;
+  termsAccepted: boolean;
+  privacyPolicyAccepted: boolean;
   phone: string;
   cpf: string;
   userType: 'student' | 'professional' | null;
