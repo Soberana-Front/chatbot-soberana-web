@@ -1,7 +1,7 @@
 // Importa utilitário de classes CSS (mesmo padrão do Pagination.tsx)
-import { cn } from '../../utils/cn'
+import { cn } from '../../../utils/cn'
 // Reaproveita o Button e o PriceDisplay já existentes
-import { Button } from './Button'
+import { Button } from '../../ui/Button'
 import { PriceDisplay } from '@/components/dashboard/PriceDisplay/PriceDisplay'
 // Reaproveita o tipo PricingResult — mesma ideia da History.tsx (Issue #84)
 import type { PricingResult } from '@/types/pricing'

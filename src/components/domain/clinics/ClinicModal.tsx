@@ -1,11 +1,11 @@
 // Importa componentes de UI já existentes
-import { Modal, ModalHeader, ModalBody, ModalFooter } from './Modal'
-import { Button } from './Button'
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../ui/Modal'
+import { Button } from '../../ui/Button'
 import { ClinicForm } from './ClinicForm'
 // Importa tipos e utilitário de formatação de moeda
-import type { Clinic } from '../../services/clinicService'
-import type { ClinicFormOutput } from '../../validations/clinicSchema'
-import { formatCurrency } from '../../utils/formatCurrency'
+import type { Clinic } from '../../../services/clinicService'
+import type { ClinicFormOutput } from '../../../validations/clinicSchema'
+import { formatCurrency } from '../../../utils/formatCurrency'
 
 // Props da ClinicModal
 export interface ClinicModalProps {

@@ -5,8 +5,8 @@ import { DashboardLayout } from '@/components/dashboard/DashboardLayout/Dashboar
 // Importa componentes de UI já existentes no projeto (reaproveitados)
 import { Pagination } from '@/components/ui/Pagination'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { HistoryCard, type HistoryCardItem } from '@/components/ui/HistoryCard'
-import { HistoryFilters } from '@/components/ui/HistoryFilters'
+import { HistoryCard, type HistoryCardItem } from '@/components/domain/history/HistoryCard'
+import { HistoryFilters } from '@/components/domain/history/HistoryFilters'
 // Ícone
 import { Clock } from 'lucide-react'
 // Hook central do módulo de Histórico (Issue #88)

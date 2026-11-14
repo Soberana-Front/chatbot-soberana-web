@@ -2,15 +2,15 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 // Importa componentes de UI já existentes (Input, Select) e o novo Textarea
-import { Input } from './Input'
-import { Select } from './Select'
-import { Textarea } from './Textarea'
+import { Input } from '../../ui/Input'
+import { Select } from '../../ui/Select'
+import { Textarea } from '../../ui/Textarea'
 // Importa schema, tipo e lista de categorias
 import {
   procedureSchema,
   PROCEDURE_CATEGORIES,
   type ProcedureFormData,
-} from '../../validations/procedureSchema'
+} from '../../../validations/procedureSchema'
 
 // Props do ProcedureForm
 export interface ProcedureFormProps {

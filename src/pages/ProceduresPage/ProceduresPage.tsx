@@ -4,10 +4,10 @@ import { Plus } from 'lucide-react'
 // Importa layout do dashboard e componentes de UI já criados
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout/DashboardLayout'
 import { SearchBar } from '../../components/ui/SearchBar'
-import { CategoryFilter } from '../../components/ui/CategoryFilter'
+import { CategoryFilter } from '../../components/domain/procedures/CategoryFilter'
 import { Pagination } from '../../components/ui/Pagination'
-import { ProcedureTable } from '../../components/ui/ProcedureTable'
-import { ProcedureModal } from '../../components/ui/ProcedureModal'
+import { ProcedureTable } from '../../components/domain/procedures/ProcedureTable'
+import { ProcedureModal } from '../../components/domain/procedures/ProcedureModal'
 import { DeleteConfirmation } from '../../components/ui/DeleteConfirmation'
 import { Button } from '../../components/ui/Button'
 // Importa o hook de estado de procedimentos (Issue #56) e as categorias do schema

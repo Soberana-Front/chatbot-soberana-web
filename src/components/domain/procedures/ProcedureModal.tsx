@@ -1,10 +1,10 @@
 // Importa componentes de UI já existentes
-import { Modal, ModalHeader, ModalBody, ModalFooter } from './Modal'
-import { Button } from './Button'
+import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../ui/Modal'
+import { Button } from '../../ui/Button'
 import { ProcedureForm } from './ProcedureForm'
 // Importa tipos
-import type { Procedure } from '../../services/procedureService'
-import type { ProcedureFormData } from '../../validations/procedureSchema'
+import type { Procedure } from '../../../services/procedureService'
+import type { ProcedureFormData } from '../../../validations/procedureSchema'
 
 // Props da ProcedureModal
 export interface ProcedureModalProps {

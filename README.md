@@ -40,3 +40,21 @@ O arquivo `.env` é local e não deve ser commitado. O arquivo `.env.example` li
 ## Estado da integração
 
 As páginas de clínicas, procedimentos, perfil, configurações, precificação e comparação ainda incluem dados simulados. Elas serão ligadas à API nos milestones M1 a M4. O build da M0 não comprova esses fluxos de ponta a ponta.
+
+## Estrutura dos componentes
+
+Os componentes estão organizados por responsabilidade:
+
+- `src/components/ui/`: componentes genéricos e reutilizáveis, como Button, Input, Modal, Card e Select.
+- `src/components/domain/`: componentes específicos do domínio, agrupados por área:
+  - `auth/`: autenticação e seleção do tipo de usuário.
+  - `clinics/`: formulários, modais e tabelas de clínicas.
+  - `history/`: cartões e filtros do histórico.
+  - `procedures/`: formulários, modais, tabelas e filtros de procedimentos.
+  - `profile/`: formulário de perfil e envio de avatar.
+- `src/components/dashboard/`: componentes específicos do painel.
+- `src/components/forms/`: seções e campos de formulários.
+- `src/components/layout/`: layouts e elementos de navegação.
+- `src/components/shared/`: componentes compartilhados entre áreas.
+
+Mantenha componentes genéricos em `ui/` e componentes vinculados a uma funcionalidade específica em `domain/`, dentro da respectiva área.

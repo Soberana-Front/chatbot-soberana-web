@@ -1,8 +1,8 @@
 // Importa React e utilitários
 import * as React from 'react';
-import { cn } from '../../utils/cn';
+import { cn } from '../../../utils/cn';
 // Importa componente Label
-import { Label } from './Label';
+import { Label } from '../../ui/Label';
 
 // Define os tipos de usuário possíveis (incluindo null para nenhum selecionado)
 export type UserType = 'student' | 'professional' | null;

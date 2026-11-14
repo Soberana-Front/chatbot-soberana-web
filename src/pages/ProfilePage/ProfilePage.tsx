@@ -4,8 +4,8 @@ import { Link } from 'react-router'
 import { KeyRound, Pencil } from 'lucide-react'
 // Importa layout do dashboard e componentes de UI
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout/DashboardLayout'
-import { AvatarUpload } from '../../components/ui/AvatarUpload'
-import { ProfileForm } from '../../components/ui/ProfileForm'
+import { AvatarUpload } from '../../components/domain/profile/AvatarUpload'
+import { ProfileForm } from '../../components/domain/profile/ProfileForm'
 import { Button } from '../../components/ui/Button'
 import { Spinner } from '../../components/ui/Spinner'
 // Importa hook do perfil, toast e tipos

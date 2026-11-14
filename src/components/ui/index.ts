@@ -7,21 +7,19 @@ export { Modal, ModalHeader, ModalBody, ModalFooter } from './Modal';
 export { Select } from './Select';
 export { Badge } from './Badge';
 export { FormSteps } from './FormSteps'; 
-export { UserTypeSelector } from './UserTypeSelector';
+
 export { ToastContainer } from './ToastContainer';
 export { ToastItem } from './ToastItem';
 
 export { SearchBar } from './SearchBar';    //issue 58
 export { Pagination } from './Pagination';  //issue 59
-export { ClinicTable } from './ClinicTable'; //issue 48
-export { ClinicForm } from './ClinicForm'; //issue 46
-export { ClinicModal } from './ClinicModal'; //issue 47
+
+
+
 export { DeleteConfirmation } from './DeleteConfirmation'; //issue 49
 export { EmptyState } from './EmptyState'; //issue 60
 export { LoadingState, ErrorState } from './AsyncStates';
 export { FormattedField } from './FormattedField';
-export { CategoryFilter } from './CategoryFilter';  //Filtro por categoria issue #52
-export { ProcedureTable } from './ProcedureTable';  //issue #55
+
+
 export { Textarea } from './Textarea'; //issue #53
-export { ProcedureForm } from './ProcedureForm';  //issue #57
-export { ProcedureModal } from './ProcedureModal';  //issue #54 

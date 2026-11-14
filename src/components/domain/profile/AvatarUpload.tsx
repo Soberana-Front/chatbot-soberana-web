@@ -2,7 +2,7 @@
 import { useRef, useState } from 'react'
 import { Camera, Loader2 } from 'lucide-react'
 // Utilitário para juntar classes condicionalmente (mesmo usado no Input, Button, Card)
-import { cn } from '../../utils/cn'
+import { cn } from '../../../utils/cn'
 
 // ===========================
 // REGRAS DO ARQUIVO

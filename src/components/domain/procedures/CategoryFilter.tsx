@@ -1,5 +1,5 @@
 // Importa o Select já existente na UI
-import { Select } from './Select'
+import { Select } from '../../ui/Select'
 
 // Props do CategoryFilter
 export interface CategoryFilterProps {

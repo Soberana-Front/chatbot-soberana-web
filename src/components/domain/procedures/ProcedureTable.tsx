@@ -1,9 +1,9 @@
 // Importa ícones de editar/excluir
 import { Pencil, Trash2 } from 'lucide-react'
 // Importa o EmptyState já criado (Issue #60)
-import { EmptyState } from './EmptyState'
+import { EmptyState } from '../../ui/EmptyState'
 // Importa o tipo de Procedimento (ainda a ser definido no procedureService, Issue #57)
-import type { Procedure } from '../../services/procedureService'
+import type { Procedure } from '../../../services/procedureService'
 
 // Props do ProcedureTable
 export interface ProcedureTableProps {

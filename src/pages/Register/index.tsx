@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router';
 import { AuthLayout } from '../../components/layout/AuthLayout';
 import { FormSteps } from '../../components/ui/FormSteps';
 import { PersonalDataSection } from '../../components/forms/PersonalDataSection';
-import { UserTypeSelector, UserType } from '../../components/ui/UserTypeSelector';
+import { UserTypeSelector, UserType } from '../../components/domain/auth/UserTypeSelector';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { registerSchema, RegisterFormData } from '../../validations/authSchemas';

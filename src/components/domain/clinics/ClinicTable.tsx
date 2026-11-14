@@ -1,9 +1,9 @@
 // Importa ícones de editar/excluir e utilitário de formatação de moeda
 import { Pencil, Trash2 } from 'lucide-react'
-import { formatCurrency } from '../../utils/formatCurrency'
+import { formatCurrency } from '../../../utils/formatCurrency'
 // Importa o tipo de Clínica já definido no service (Issue #51)
-import type { Clinic } from '../../services/clinicService'
-import { EmptyState } from './EmptyState'
+import type { Clinic } from '../../../services/clinicService'
+import { EmptyState } from '../../ui/EmptyState'
 
 // Props do componente ClinicTable
 export interface ClinicTableProps {

@@ -2,8 +2,8 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 // Importa componentes de UI já existentes
-import { Input } from './Input'
-import { Select } from './Select'
+import { Input } from '../../ui/Input'
+import { Select } from '../../ui/Select'
 // Importa schema, tipos e listas de opções
 import {
   clinicSchema,
@@ -11,7 +11,7 @@ import {
   CLINIC_TYPES,
   type ClinicFormInput,
   type ClinicFormOutput,
-} from '../../validations/clinicSchema'
+} from '../../../validations/clinicSchema'
 
 // Props do ClinicForm
 export interface ClinicFormProps {

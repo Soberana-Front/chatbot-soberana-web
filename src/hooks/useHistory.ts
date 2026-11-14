@@ -5,7 +5,7 @@ import type { PricingResult, PricingDetail as PricingDetailData } from '../types
 // Reaproveita o formato de filtros já definido no componente HistoryFilters
 // (Issue #86) — o hook NÃO redefine esse tipo, só importa, pra não ter
 // duas fontes de verdade pro mesmo formato.
-import { EMPTY_HISTORY_FILTERS, type HistoryFiltersState } from '../components/ui/HistoryFilters'
+import { EMPTY_HISTORY_FILTERS, type HistoryFiltersState } from '../components/domain/history/HistoryFilters'
 
 // ============================================================
 // TIPOS

@@ -1,11 +1,11 @@
 // Importa componentes de UI já existentes (reaproveitados)
-import { Input } from './Input'
-import { Select, type SelectOption } from './Select'
-import { Button } from './Button'
+import { Input } from '../../ui/Input'
+import { Select, type SelectOption } from '../../ui/Select'
+import { Button } from '../../ui/Button'
 // Ícones
 import { Filter, X } from 'lucide-react'
 // Utilitário de classes CSS (mesmo padrão do Pagination.tsx / HistoryCard.tsx)
-import { cn } from '../../utils/cn'
+import { cn } from '../../../utils/cn'
 
 // ============================================================
 // TIPO EXPORTADO: HistoryFiltersState

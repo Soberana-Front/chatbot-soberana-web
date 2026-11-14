@@ -2,14 +2,14 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 // Importa componentes de UI já existentes
-import { Input } from './Input'
-import { Select } from './Select'
+import { Input } from '../../ui/Input'
+import { Select } from '../../ui/Select'
 // Importa schema, tipo do formulário e lista de especialidades
 import {
   profileSchema,
   SPECIALTIES,
   type ProfileFormData,
-} from '../../validations/profileSchema'
+} from '../../../validations/profileSchema'
 
 // ===========================
 // TIPOS
