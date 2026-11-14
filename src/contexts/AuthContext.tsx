@@ -17,6 +17,8 @@ interface AuthContextType {
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (data: { token: string; password: string; passwordConfirmation: string }) => Promise<void>;
   checkAuth: () => Promise<void>;
+
+  updateUser: (data: Partial<Pick<User, 'name' | 'email'>>) => void;
 }
 
 // Cria o contexto
@@ -84,7 +86,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Função de logout
+  // Atualiza os dados basicos do usuario autenticado
+  const updateUser = (data: Partial<Pick<User, 'name' | 'email'>>) => {
+    if (!user) return;
+
+    const updatedUser = { ...user, ...data };
+    setUser(updatedUser);
+    localStorage.setItem('@Soberana:user', JSON.stringify(updatedUser));
+  };
+  // Funcao de logout
   const logout = () => {
     authService.logout();
     setUser(null);
@@ -142,6 +152,8 @@ const isAuthenticated = !!user && !!token;
         forgotPassword,
         resetPassword,
         checkAuth,
+
+        updateUser,
       }}
     >
       {children}

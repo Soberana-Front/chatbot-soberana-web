@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 // Importa os tipos do perfil
 import type { UserProfile, UpdateProfileData, ChangePasswordPayload } from '../types/profile'
 
+import { useAuth } from '../contexts/AuthContext'
+
 // ============================================================
 // DADOS MOCKADOS
 // ============================================================
@@ -76,6 +78,9 @@ interface UseProfileOptions {
  * (isSubmitting / isUploadingAvatar), como já era feito.
  */
 export const useProfile = ({ fetchOnMount = true }: UseProfileOptions = {}) => {
+  const { user: authUser, updateUser } = useAuth()
+  const authUserRef = useRef(authUser)
+  authUserRef.current = authUser
   const [user, setUser] = useState<UserProfile | null>(null)
   // Começa true só quando vai buscar ao montar; senão a tela ficaria "carregando" para sempre
   const [isLoading, setIsLoading] = useState<boolean>(fetchOnMount)
@@ -97,7 +102,7 @@ export const useProfile = ({ fetchOnMount = true }: UseProfileOptions = {}) => {
       // Quando a API estiver pronta: const data = await profileService.getProfile()
       //                              setUser(data)
       await simulateNetwork()
-      setUser(MOCK_USER)
+      setUser({ ...MOCK_USER, ...(authUserRef.current ?? {}) })
     } catch (err) {
       setError('Erro ao carregar o perfil. Tente novamente.')
     } finally {
@@ -113,6 +118,10 @@ export const useProfile = ({ fetchOnMount = true }: UseProfileOptions = {}) => {
   // ------------------------------------------------------------
   // Atualizar dados pessoais
   // ------------------------------------------------------------
+  useEffect(() => {
+    if (!authUser) return
+    setUser((prev) => (prev ? { ...prev, ...authUser } : prev))
+  }, [authUser])
   const updateProfile = useCallback(async (data: UpdateProfileData) => {
     setError(null)
     try {
@@ -120,12 +129,14 @@ export const useProfile = ({ fetchOnMount = true }: UseProfileOptions = {}) => {
       //                              setUser(updated)
       await simulateNetwork()
       setUser((prev) => (prev ? { ...prev, ...data } : prev))
+
+      updateUser({ name: data.name, email: data.email })
     } catch (err) {
       setError('Erro ao atualizar o perfil. Tente novamente.')
       // Repassa o erro para a página decidir o que fazer (ex: manter o modo edição)
       throw err
     }
-  }, [])
+  }, [updateUser])
 
   // ------------------------------------------------------------
   // Trocar foto
