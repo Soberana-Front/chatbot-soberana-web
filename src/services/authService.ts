@@ -1,6 +1,7 @@
 // Importa instância do Axios
 import { api } from './api';
 import type { paths } from '../api/generated/schema';
+import type { RegisterSettings } from '../types/settings';
 
 type LoginRoute = paths['/api/auth/login']['post'];
 type RegisterRoute = paths['/api/auth/register']['post'];
@@ -10,9 +11,13 @@ type RegisterRequest = RegisterRoute['requestBody']['content']['application/json
 export type LoginCredentials = LoginRoute['requestBody']['content']['application/json'];
 
 // Dados para registro de usuário
-export type RegisterData = Omit<RegisterRequest, 'termsAccepted' | 'privacyPolicyAccepted'> & {
+export type RegisterData = Omit<
+  RegisterRequest,
+  'termsAccepted' | 'privacyPolicyAccepted' | 'settings'
+> & {
   termsAccepted: boolean;
   privacyPolicyAccepted: boolean;
+  settings?: RegisterSettings;
 };
 
 // Resposta padrão da API de autenticação

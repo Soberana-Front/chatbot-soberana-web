@@ -3,8 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 // Importa o tipo das configurações do settingsService (Issue #97).
 // O service ainda não é chamado (não há backend), mas o tipo já é o oficial.
-import type { UserSettings, UpdateSettingsPayload } from '../services/settingsService'
-
+import type { UserSettings, UpdateSettingsPayload } from '../types/settings';
 // ============================================================
 // DADOS MOCKADOS
 // ============================================================

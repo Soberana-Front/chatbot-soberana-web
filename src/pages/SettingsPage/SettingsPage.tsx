@@ -22,8 +22,7 @@ import {
 } from '../../validations/settingsSchema'
 import { useSettings } from '../../hooks/useSettings'
 import { useToast } from '../../contexts/ToastContext'
-import type { UserSettings } from '../../services/settingsService'
-
+import type { UserSettings } from '../../types/settings';
 // ============================================================
 // FORMULÁRIO
 // ============================================================
