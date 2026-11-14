@@ -8,8 +8,7 @@ import { createBrowserRouter } from "react-router";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { PublicRoute } from "../components/PublicRoute";
 
-// Importa layout base
-import { Layout } from "../components/layout/Layout";
+
 
 // Importa páginas de autenticação
 import Login from "../pages/Login";
@@ -126,15 +125,6 @@ export const router = createBrowserRouter([
 
       // pagina de configurações issue 93
       { path: "configuracoes", element: <SettingsPage /> },
-
-      // Demais páginas usando o Layout compartilhado
-      {
-        element: <Layout />,
-        children: [
-          /*{ path: "perfil", element: <Perfil /> }, issue 89*/
-         /* { path: "configuracoes", element: <Configuracoes /> }, issue 93*/
-        ],
-      },
     ],
   },
 
