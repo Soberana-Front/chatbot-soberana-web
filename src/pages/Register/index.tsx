@@ -148,7 +148,7 @@ const Register = () => {
               <Input
                 label="Senha"
                 type="password"
-                placeholder="******"
+                placeholder=" A senha deve ter pelo menos 8 caracteres"
                 showPasswordToggle
                 error={errors.password?.message as string | undefined}
                 required

@@ -18,8 +18,8 @@ export const registerSchema = z
     phone: z.string().regex(/^\d{10,11}$/, 'Telefone inválido'),
     cpf: z.string().regex(/^\d{11}$/, 'CPF inválido'),
     userType: z.enum(['student', 'professional']).nullable(),
-    password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
-    passwordConfirmation: z.string().min(6, 'Confirme sua senha'),
+    password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres'),
+    passwordConfirmation: z.string().min(8, 'Confirme sua senha'),
     termsAccepted: z.boolean().refine((accepted) => accepted, 'Aceite os Termos de Uso para continuar'),
     privacyPolicyAccepted: z.boolean().refine((accepted) => accepted, 'Aceite a Política de Privacidade para continuar'),
   })
@@ -46,8 +46,8 @@ export type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 // Schema de validação do formulário de redefinição de senha (com validação de igualdade)
 export const resetPasswordSchema = z
   .object({
-    password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
-    passwordConfirmation: z.string().min(6, 'Confirme sua senha'),
+    password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres'),
+    passwordConfirmation: z.string().min(8, 'Confirme sua senha'),
   })
   .refine((data) => data.password === data.passwordConfirmation, {
     message: 'As senhas não coincidem',
