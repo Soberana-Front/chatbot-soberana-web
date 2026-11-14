@@ -1,225 +1,143 @@
-// Importa hooks do React
-import { useState, useCallback } from 'react';
-// Importa tipo de dados da comparação
-import { ComparisonClinicData } from '../components/dashboard/ComparisonTable/ComparisonTable';
+﻿import { useState, useCallback, useEffect } from 'react';
+import {
+  comparisonService,
+  type ComparisonClinic,
+  type ComparisonProcedure,
+  type CurrentClinicCosts,
+  type ClinicPricingDefaults,
+} from '../services/comparisonService';
 
+export type Clinic = ComparisonClinic;
+export type Procedure = ComparisonProcedure;
 
-// Interface básica de clínica
-export interface Clinic {
-  id: string;
-  name: string;
+export interface ComparisonClinicResult {
+  clinic: ComparisonClinic;
+  costs: CurrentClinicCosts;
+  pricing: ClinicPricingDefaults;
 }
 
-// Interface básica de procedimento
-export interface Procedure {
-  id: string;
-  name: string;
-}
-
-// Resultado completo da comparação
 export interface ComparisonResult {
-  clinicA: ComparisonClinicData;
-  clinicB: ComparisonClinicData;
-  difference: {
-    percentDiff: number;         // % de diferença (A em relação a B)
-    absoluteDiff: number;         // R$ de diferença
-    isMoreExpensive: boolean;     // A é mais cara que B?
-    isEqual: boolean;             // Preços iguais?
-  };
-  chartData: {
-    priceComparison: Array<{ name: string; [key: string]: string | number }>;
-    costDistributionA: Array<{ name: string; value: number }>;
-    costDistributionB: Array<{ name: string; value: number }>;
-    profitVsCost: Array<{ name: string; Custo: number; Lucro: number }>;
-  };
+  clinicA: ComparisonClinicResult;
+  clinicB: ComparisonClinicResult;
+  procedure: ComparisonProcedure;
 }
-
-// DADOS MOCKADOS (temporários até integração com API)
-
-
-export const MOCK_CLINICS: Clinic[] = [
-  { id: '1', name: 'Clínica OdontoSoberana' },
-  { id: '2', name: 'Clínica Sorriso Perfeito' },
-  { id: '3', name: 'Clínica Odonto Prime' },
-];
-
-export const MOCK_PROCEDURES: Procedure[] = [
-  { id: '1', name: 'Consulta Odontológica' },
-  { id: '2', name: 'Limpeza e Profilaxia' },
-  { id: '3', name: 'Tratamento de Canal' },
-  { id: '4', name: 'Clareamento Dental' },
-];
-
-// FUNÇÕES AUXILIARES
-
-// Simula a busca dos dados de uma clínica para o procedimento (mock)
-const fetchClinicData = (
-  clinic: Clinic,
-  procedure: Procedure,
-): ComparisonClinicData => {
-  // Gera valores simulados com base no id da clínica
-  const seed = Number(clinic.id) * 10 + Number(procedure.id);
-
-  return {
-    clinicId: clinic.id,
-    clinicName: clinic.name,
-    tempo: 30 + (seed % 40),
-    materiais: 30 + (seed % 30),
-    custosFixos: 80 + (seed % 60),
-    custosVariaveis: 20 + (seed % 20),
-    horaClinica: 60 + (seed % 40),
-    comissao: 30 + (seed % 15),
-    impostos: 10 + (seed % 10),
-    margem: 20 + (seed % 15),
-    precoFinal: 250 + (seed % 150),
-  };
-};
-
-// Calcula a diferença entre as clínicas
-const calculateDifference = (
-  clinicA: ComparisonClinicData,
-  clinicB: ComparisonClinicData,
-) => {
-  const base = clinicB.precoFinal === 0 ? 1 : clinicB.precoFinal;
-  const percentDiff = ((clinicA.precoFinal - clinicB.precoFinal) / base) * 100;
-  const absoluteDiff = Math.abs(clinicA.precoFinal - clinicB.precoFinal);
-
-  return {
-    percentDiff,
-    absoluteDiff,
-    isMoreExpensive: percentDiff > 0,
-    isEqual: Math.abs(percentDiff) < 0.01,
-  };
-};
-
-// Gera os dados para os gráficos
-const generateChartData = (
-  clinicA: ComparisonClinicData,
-  clinicB: ComparisonClinicData,
-) => {
-  // Gráfico 1: Comparação de Preço Final
-  const priceComparison = [
-    {
-      name: 'Preço Final',
-      [clinicA.clinicName]: clinicA.precoFinal,
-      [clinicB.clinicName]: clinicB.precoFinal,
-    },
-  ];
-
-  // Gráfico 2: Distribuição dos Custos
-  const costDistributionA = [
-    { name: 'Materiais', value: clinicA.materiais },
-    { name: 'Custos Fixos', value: clinicA.custosFixos },
-    { name: 'Custos Variáveis', value: clinicA.custosVariaveis },
-  ];
-
-  const costDistributionB = [
-    { name: 'Materiais', value: clinicB.materiais },
-    { name: 'Custos Fixos', value: clinicB.custosFixos },
-    { name: 'Custos Variáveis', value: clinicB.custosVariaveis },
-  ];
-
-  // Gráfico 3: Lucro vs Custo
-  const totalCostA = clinicA.materiais + clinicA.custosFixos + clinicA.custosVariaveis;
-  const totalCostB = clinicB.materiais + clinicB.custosFixos + clinicB.custosVariaveis;
-
-  const profitVsCost = [
-    {
-      name: clinicA.clinicName,
-      Custo: totalCostA,
-      Lucro: clinicA.precoFinal - totalCostA,
-    },
-    {
-      name: clinicB.clinicName,
-      Custo: totalCostB,
-      Lucro: clinicB.precoFinal - totalCostB,
-    },
-  ];
-
-  return {
-    priceComparison,
-    costDistributionA,
-    costDistributionB,
-    profitVsCost,
-  };
-};
-
-// HOOK PRINCIPAL
 
 export const useComparison = () => {
-  // Estado das clínicas e procedimento selecionados
+  const [clinics, setClinics] = useState<Clinic[]>([]);
+  const [procedures, setProcedures] = useState<Procedure[]>([]);
   const [clinicA, setClinicA] = useState<Clinic | null>(null);
   const [clinicB, setClinicB] = useState<Clinic | null>(null);
   const [procedure, setProcedure] = useState<Procedure | null>(null);
-
-  // Estado do resultado da comparação
-  const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
-
-  // Estados de loading e erro
+  const [comparisonResult, setComparisonResult] =
+    useState<ComparisonResult | null>(null);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Função principal de comparação
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadOptions = async () => {
+      setIsLoadingOptions(true);
+      setError(null);
+
+      try {
+        const [clinicsData, proceduresData] = await Promise.all([
+          comparisonService.listClinics(),
+          comparisonService.listProcedures(),
+        ]);
+
+        if (!isMounted) return;
+
+        setClinics(clinicsData);
+        setProcedures(proceduresData);
+      } catch (err: unknown) {
+        if (!isMounted) return;
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Não foi possível carregar clínicas e procedimentos.',
+        );
+      } finally {
+        if (isMounted) setIsLoadingOptions(false);
+      }
+    };
+
+    void loadOptions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const compare = useCallback(
-    async (clinicAId: string, clinicBId: string, procedureId: string) => {
+    async (
+      clinicAId: string,
+      clinicBId: string,
+      procedureId: string,
+    ): Promise<ComparisonResult> => {
       setIsLoading(true);
       setError(null);
       setComparisonResult(null);
 
       try {
-        // Validações básicas
         if (clinicAId === clinicBId) {
           throw new Error('As clínicas selecionadas devem ser diferentes.');
         }
 
-        // Busca as clínicas e procedimento
-        const foundClinicA = MOCK_CLINICS.find((c) => c.id === clinicAId);
-        const foundClinicB = MOCK_CLINICS.find((c) => c.id === clinicBId);
-        const foundProcedure = MOCK_PROCEDURES.find((p) => p.id === procedureId);
+        const foundClinicA = clinics.find((clinic) => clinic.id === clinicAId);
+        const foundClinicB = clinics.find((clinic) => clinic.id === clinicBId);
+        const foundProcedure = procedures.find((item) => item.id === procedureId);
 
         if (!foundClinicA || !foundClinicB || !foundProcedure) {
-          throw new Error('Clínica ou procedimento não encontrado.');
+          throw new Error(
+            'Clínica ou procedimento não encontrado. Atualize a página e tente novamente.',
+          );
         }
 
-        // Simula delay de rede
-        await new Promise((resolve) => setTimeout(resolve, 1200));
+        const [costsA, pricingA, costsB, pricingB] = await Promise.all([
+          comparisonService.getCurrentCosts(clinicAId),
+          comparisonService.getPricingDefaults(clinicAId),
+          comparisonService.getCurrentCosts(clinicBId),
+          comparisonService.getPricingDefaults(clinicBId),
+        ]);
 
-        // Atualiza estados
+        const result: ComparisonResult = {
+          clinicA: {
+            clinic: foundClinicA,
+            costs: costsA,
+            pricing: pricingA,
+          },
+          clinicB: {
+            clinic: foundClinicB,
+            costs: costsB,
+            pricing: pricingB,
+          },
+          procedure: foundProcedure,
+        };
+
         setClinicA(foundClinicA);
         setClinicB(foundClinicB);
         setProcedure(foundProcedure);
-
-        // Busca os dados das clínicas (mock)
-        const dataA = fetchClinicData(foundClinicA, foundProcedure);
-        const dataB = fetchClinicData(foundClinicB, foundProcedure);
-
-        // Calcula diferenças
-        const difference = calculateDifference(dataA, dataB);
-
-        // Gera dados para gráficos
-        const chartData = generateChartData(dataA, dataB);
-
-        // Monta o resultado final
-        const result: ComparisonResult = {
-          clinicA: dataA,
-          clinicB: dataB,
-          difference,
-          chartData,
-        };
-
         setComparisonResult(result);
+
         return result;
-      } catch (err: any) {
-        setError(err.message || 'Erro ao comparar clínicas. Tente novamente.');
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'Erro ao comparar clínicas. Tente novamente.';
+
+        setError(message);
         throw err;
       } finally {
         setIsLoading(false);
       }
     },
-    [],
+    [clinics, procedures],
   );
 
-  // Função para limpar o resultado
   const reset = useCallback(() => {
     setClinicA(null);
     setClinicB(null);
@@ -229,18 +147,16 @@ export const useComparison = () => {
   }, []);
 
   return {
-    // Estados
+    clinics,
+    procedures,
     clinicA,
     clinicB,
     procedure,
     comparisonResult,
     isLoading,
+    isLoadingOptions,
     error,
-    // Ações
     compare,
     reset,
-    // Dados mockados expostos para os seletores
-    mockClinics: MOCK_CLINICS,
-    mockProcedures: MOCK_PROCEDURES,
   };
 };
