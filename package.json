@@ -36,6 +36,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
+    "dotenv-cli": "^11.0.0",
     "openapi-typescript": "latest",
     "typescript": "latest",
     "vite": "latest"
