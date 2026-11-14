@@ -1,5 +1,5 @@
 // Importa função para criar roteador
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Link } from "react-router";
 
 
 
@@ -48,7 +48,7 @@ import { ChangePasswordPage } from "../pages/ChangePasswordPage/ChangePasswordPa
 // Importa página de configurações (Issue #93)
 import { SettingsPage } from "../pages/SettingsPage/SettingsPage";
 import { ForbiddenPage } from '../pages/forbidden-page';
-import { NotFoundPage } from '../pages/not-found-page';
+
 
 /* virou uma página própria, então não precisa mais desse componente genérico
 const Historico = () => (
@@ -135,6 +135,14 @@ export const router = createBrowserRouter([
   {
     // Rota 404
     path: "*",
-    element: <NotFoundPage />,
+    element: (
+      <main className="not-found-page">
+        <p className="not-found-code">Erro 404</p>
+        <h1 className="not-found-title">Página não encontrada</h1>
+        <Link className="not-found-link" to="/">
+          Voltar ao início
+        </Link>
+      </main>
+    ),
   },
 ]);
