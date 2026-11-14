@@ -155,7 +155,7 @@ export const useProfile = ({ fetchOnMount = true }: UseProfileOptions = {}) => {
   const changePassword = useCallback(async (data: ChangePasswordPayload) => {
     setError(null)
     try {
-      // Quando a API estiver pronta: await authService.changePassword(data)
+      // Quando a API estiver pronta: await profileService.changePassword(data)
       //
       // ATENÇÃO para o backend: senha atual errada NÃO deve responder 401.
       // O interceptor do api.ts trata todo 401 como "sessão expirada"
