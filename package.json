@@ -9,7 +9,7 @@
     "typecheck": "tsc -b --pretty false",
     "test:unit": "vitest run && node --test tests/*.test.mjs",
     "preview": "vite preview",
-    "api:types": "openapi-typescript ${VITE_API_OPENAPI_URL:-http://localhost:8081/api/docs/json} -o src/api/generated/schema.d.ts",
+    "api:types": "openapi-typescript http://localhost:8081/api/docs/json -o src/api/generated/schema.d.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write package.json eslint.config.js .prettierrc.json vite.config.ts tests/setup.ts tests/Button.test.tsx",
