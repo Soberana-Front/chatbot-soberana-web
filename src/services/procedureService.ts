@@ -7,32 +7,48 @@ import type { ProcedureCategory } from '../validations/procedureSchema'
 // TIPOS
 // ===========================
 
-// Formato de um procedimento retornado pela API
+// Formato bruto retornado pelo backend
+export interface BackendProcedure {
+  id: string
+  clinicId: string | null
+  name: string
+  category: string | null
+  averageTime?: number
+  description?: string
+}
+
+// Formato de um procedimento utilizado pelo frontend
 export interface Procedure {
   id: string
+  clinicId?: string | null
   name: string
   category: ProcedureCategory
-  time: number          // em minutos
-  description?: string  // opcional
+  time: number          // mapeado a partir de averageTime
+  averageTime?: number  // contrato do backend
+  description?: string
 }
 
-// Payload enviado ao criar/editar um procedimento (sem o id, gerado pelo backend)
-export type ProcedurePayload = Omit<Procedure, 'id'>
+// Payload enviado ao criar/editar um procedimento
+export interface ProcedurePayload {
+  clinicId?: string
+  name: string
+  category: string
+  time?: number
+  averageTime?: number
+  description?: string
+}
 
-// Parâmetros de busca/paginação enviados no GET /procedures
+// Parâmetros de busca enviados no GET /procedures (backend aceita search)
 export interface GetProceduresParams {
   search?: string
-  category?: string
-  page?: number
-  pageSize?: number
 }
 
-// Formato paginado retornado pela API
-export interface PaginatedProcedures {
-  data: Procedure[]
-  page: number
-  totalPages: number
-  totalItems: number
+// Wrapper padrão de resposta do backend Soberana
+interface ApiResponse<T> {
+  status: boolean
+  data: T
+  message: string
+  timestamp: string
 }
 
 // ===========================
@@ -40,61 +56,99 @@ export interface PaginatedProcedures {
 // ===========================
 
 /**
- * Serviço responsável por toda comunicação com a API de procedimentos (Issue #57).
- *
- * Segue exatamente o mesmo padrão do clinicService (Issue #51): cada método
- * usa async/await dentro de try/catch, e repassa o erro adiante (throw) —
- * quem trata de fato é o hook useProcedures, que decide a mensagem exibida
- * ao usuário.
+ * Serviço responsável por toda comunicação com a API de procedimentos.
+ * Alinhado com as rotas reais do backend:
+ * - GET    /procedures             → lista procedimentos (filtro opcional por nome: search)
+ * - GET    /procedures/:id         → detalhes do procedimento
+ * - POST   /procedures             → criação de procedimento
+ * - PATCH  /procedures/:id         → atualização parcial
+ * - DELETE /procedures/:id         → exclusão lógica
  */
 export const procedureService = {
-  // GET /procedures — lista procedimentos com paginação e filtros
-  getProcedures: async (params?: GetProceduresParams): Promise<PaginatedProcedures> => {
-    try {
-      const response = await api.get<PaginatedProcedures>('/procedures', { params })
-      return response.data
-    } catch (error) {
-      throw error
-    }
+  // GET /procedures — lista procedimentos com filtro opcional por nome
+  getProcedures: async (params?: GetProceduresParams): Promise<Procedure[]> => {
+    const response = await api.get<ApiResponse<BackendProcedure[]>>('/procedures', {
+      params: params?.search ? { search: params.search } : undefined,
+    })
+    const items = response.data?.data ?? []
+    return items.map((p) => ({
+      id: p.id,
+      clinicId: p.clinicId,
+      name: p.name,
+      category: (p.category ?? '') as ProcedureCategory,
+      time: p.averageTime ?? 0,
+      averageTime: p.averageTime,
+      description: p.description ?? undefined,
+    }))
   },
 
   // GET /procedures/:id — busca um procedimento específico
   getProcedure: async (id: string): Promise<Procedure> => {
-    try {
-      const response = await api.get<Procedure>(`/procedures/${id}`)
-      return response.data
-    } catch (error) {
-      throw error
+    const response = await api.get<ApiResponse<BackendProcedure>>(`/procedures/${encodeURIComponent(id)}`)
+    const p = response.data.data
+    return {
+      id: p.id,
+      clinicId: p.clinicId,
+      name: p.name,
+      category: (p.category ?? '') as ProcedureCategory,
+      time: p.averageTime ?? 0,
+      averageTime: p.averageTime,
+      description: p.description ?? undefined,
     }
   },
 
   // POST /procedures — cria um novo procedimento
   createProcedure: async (data: ProcedurePayload): Promise<Procedure> => {
-    try {
-      const response = await api.post<Procedure>('/procedures', data)
-      return response.data
-    } catch (error) {
-      throw error
+    const payload = {
+      clinicId: data.clinicId,
+      name: data.name,
+      category: data.category,
+      averageTime: data.averageTime ?? data.time,
+      description: data.description,
+    }
+    const response = await api.post<ApiResponse<BackendProcedure>>('/procedures', payload)
+    const p = response.data.data
+    return {
+      id: p.id,
+      clinicId: p.clinicId,
+      name: p.name,
+      category: (p.category ?? '') as ProcedureCategory,
+      time: p.averageTime ?? 0,
+      averageTime: p.averageTime,
+      description: p.description ?? undefined,
     }
   },
 
-  // PUT /procedures/:id — atualiza um procedimento existente
-  updateProcedure: async (id: string, data: ProcedurePayload): Promise<Procedure> => {
-    try {
-      const response = await api.put<Procedure>(`/procedures/${id}`, data)
-      return response.data
-    } catch (error) {
-      throw error
+  // PATCH /procedures/:id — atualiza um procedimento existente (backend usa PATCH)
+  updateProcedure: async (id: string, data: Partial<ProcedurePayload>): Promise<Procedure> => {
+    const payload: Record<string, unknown> = {}
+    if (data.clinicId) payload.clinicId = data.clinicId
+    if (data.name !== undefined) payload.name = data.name
+    if (data.category !== undefined) payload.category = data.category
+    if (data.averageTime !== undefined || data.time !== undefined) {
+      payload.averageTime = data.averageTime ?? data.time
+    }
+    if (data.description !== undefined) payload.description = data.description
+
+    const response = await api.patch<ApiResponse<BackendProcedure>>(
+      `/procedures/${encodeURIComponent(id)}`,
+      payload
+    )
+    const p = response.data.data
+    return {
+      id: p.id,
+      clinicId: p.clinicId,
+      name: p.name,
+      category: (p.category ?? '') as ProcedureCategory,
+      time: p.averageTime ?? 0,
+      averageTime: p.averageTime,
+      description: p.description ?? undefined,
     }
   },
 
   // DELETE /procedures/:id — exclui um procedimento
   deleteProcedure: async (id: string): Promise<void> => {
-    try {
-      await api.delete(`/procedures/${id}`)
-    } catch (error) {
-      throw error
-    }
+    await api.delete(`/procedures/${encodeURIComponent(id)}`)
   },
 }
 

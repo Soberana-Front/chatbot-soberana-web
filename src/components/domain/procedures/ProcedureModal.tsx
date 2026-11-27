@@ -42,7 +42,7 @@ export const ProcedureModal = ({
   const defaultValues = procedure
     ? {
         name: procedure.name,
-        category: procedure.category,
+        category: procedure.category as ProcedureFormData['category'],
         time: procedure.time,
         description: procedure.description,
       }

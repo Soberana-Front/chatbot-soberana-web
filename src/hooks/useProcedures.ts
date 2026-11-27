@@ -11,29 +11,19 @@ export interface ProceduresPagination {
   totalItems: number
 }
 
-// Dados mockados usados enquanto a API real (Issue #57) não está disponível.
-// Mesma estratégia do useClinics: permite montar e testar a tela (Issue #52)
-// sem depender do backend.
-const MOCK_PROCEDURES: Procedure[] = [
-  { id: '1', name: 'Limpeza dental', category: 'Prevenção', time: 30, description: 'Remoção de tártaro e placa bacteriana' },
-  { id: '2', name: 'Extração de siso', category: 'Cirurgia', time: 60, description: 'Remoção cirúrgica do terceiro molar' },
-  { id: '3', name: 'Clareamento dental', category: 'Estética', time: 45, description: 'Clareamento a laser em consultório' },
-  { id: '4', name: 'Radiografia panorâmica', category: 'Diagnóstico', time: 15, description: 'Raio-x completo da arcada dentária' },
-]
-
 const PAGE_SIZE = 10
 
 /**
- * Hook responsável pelo estado e pelas operações de Procedimentos (Issue #56).
- *
- * Estrutura idêntica ao useClinics (Issue #50): mock local, filtro e
- * paginação aplicados em memória, async/await + try/catch em toda operação,
- * e comentários marcando onde trocar o mock pelo procedureService real.
- * A única diferença de comportamento é o filtro: aqui existem DOIS filtros
- * combináveis (texto de busca E categoria), enquanto em Clínicas era só texto.
+ * Hook responsável pelo estado e pelas operações de Procedimentos (Issue #33 - FE-020).
+ * Alinhado com o contrato real do backend e com o padrão adotado em useClinics.
+ * 
+ * - Busca inicial e filtro por nome via GET /procedures?search=...
+ * - Filtro de categoria e paginação aplicados sobre os dados retornados
+ * - Criação (POST), Edição (PATCH) e Exclusão (DELETE) reais
+ * - Tratamento de loading, erro, lista vazia e paginação
  */
 export const useProcedures = () => {
-  const [allProcedures, setAllProcedures] = useState<Procedure[]>(MOCK_PROCEDURES)
+  const [allProcedures, setAllProcedures] = useState<Procedure[]>([])
   const [procedures, setProcedures] = useState<Procedure[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
@@ -45,7 +35,7 @@ export const useProcedures = () => {
     totalItems: 0,
   })
 
-  // Aplica filtro de texto + categoria e paginação sobre allProcedures
+  // Aplica filtro de categoria e paginação sobre allProcedures
   const applyFilterAndPagination = useCallback(
     (source: Procedure[], searchTerm: string, categoryFilter: string, page: number) => {
       const term = searchTerm.trim().toLowerCase()
@@ -68,27 +58,23 @@ export const useProcedures = () => {
     []
   )
 
-  // Carrega os procedimentos (hoje mockado; troca para procedureService.getProcedures quando a API #57 estiver pronta)
+  // Carrega os procedimentos da API real (GET /procedures)
   const fetchProcedures = useCallback(
     async (params?: GetProceduresParams) => {
       setIsLoading(true)
       setError(null)
 
       try {
-        // --- Quando a API estiver pronta, substituir o bloco abaixo por: ---
-        // const response = await procedureService.getProcedures(params)
-        // setAllProcedures(response.data)
-        // setPagination({ page: response.page, totalPages: response.totalPages, totalItems: response.totalItems })
-
-        await new Promise((resolve) => setTimeout(resolve, 300))
-        applyFilterAndPagination(
-          MOCK_PROCEDURES,
-          params?.search ?? search,
-          params?.category ?? category,
-          params?.page ?? 1
-        )
-      } catch (err) {
+        const searchTerm = params?.search !== undefined ? params.search : search
+        const data = await procedureService.getProcedures({
+          search: searchTerm ? searchTerm : undefined,
+        })
+        setAllProcedures(data)
+        applyFilterAndPagination(data, searchTerm, category, 1)
+      } catch {
         setError('Erro ao carregar os procedimentos. Tente novamente.')
+        setAllProcedures([])
+        setProcedures([])
       } finally {
         setIsLoading(false)
       }
@@ -96,16 +82,16 @@ export const useProcedures = () => {
     [applyFilterAndPagination, search, category]
   )
 
-  // Atualiza o termo de busca e reaplica filtro/paginação (volta pra página 1)
+  // Atualiza o termo de busca e reaplica filtro/paginação (busca remota na API)
   const filterProcedures = useCallback(
     (term: string) => {
       setSearch(term)
-      applyFilterAndPagination(allProcedures, term, category, 1)
+      void fetchProcedures({ search: term })
     },
-    [allProcedures, category, applyFilterAndPagination]
+    [fetchProcedures]
   )
 
-  // Atualiza o filtro de categoria e reaplica (volta pra página 1)
+  // Atualiza o filtro de categoria e reaplica sobre allProcedures (volta pra página 1)
   const filterByCategory = useCallback(
     (categoryFilter: string) => {
       setCategory(categoryFilter)
@@ -122,13 +108,12 @@ export const useProcedures = () => {
     [allProcedures, search, category, applyFilterAndPagination]
   )
 
-  // Cria um procedimento novo (mockado por enquanto)
+  // Cria um procedimento via API real
   const createProcedure = useCallback(
     async (data: ProcedurePayload) => {
       setError(null)
       try {
-        // Quando a API estiver pronta: const created = await procedureService.createProcedure(data)
-        const created: Procedure = { id: crypto.randomUUID(), ...data }
+        const created = await procedureService.createProcedure(data)
         const updated = [created, ...allProcedures]
         setAllProcedures(updated)
         applyFilterAndPagination(updated, search, category, 1)
@@ -141,17 +126,18 @@ export const useProcedures = () => {
     [allProcedures, search, category, applyFilterAndPagination]
   )
 
-  // Edita um procedimento existente (mockado por enquanto)
+  // Edita um procedimento via API real
   const updateProcedure = useCallback(
-    async (id: string, data: ProcedurePayload) => {
+    async (id: string, data: Partial<ProcedurePayload>) => {
       setError(null)
       try {
-        // Quando a API estiver pronta: await procedureService.updateProcedure(id, data)
+        const updatedProcedure = await procedureService.updateProcedure(id, data)
         const updated = allProcedures.map((procedure) =>
-          procedure.id === id ? { ...procedure, ...data } : procedure
+          procedure.id === id ? updatedProcedure : procedure
         )
         setAllProcedures(updated)
         applyFilterAndPagination(updated, search, category, pagination.page)
+        return updatedProcedure
       } catch (err) {
         setError('Erro ao atualizar o procedimento. Tente novamente.')
         throw err
@@ -160,12 +146,12 @@ export const useProcedures = () => {
     [allProcedures, search, category, pagination.page, applyFilterAndPagination]
   )
 
-  // Exclui um procedimento (mockado por enquanto)
+  // Exclui um procedimento via API real
   const deleteProcedure = useCallback(
     async (id: string) => {
       setError(null)
       try {
-        // Quando a API estiver pronta: await procedureService.deleteProcedure(id)
+        await procedureService.deleteProcedure(id)
         const updated = allProcedures.filter((procedure) => procedure.id !== id)
         setAllProcedures(updated)
         applyFilterAndPagination(updated, search, category, pagination.page)
@@ -178,7 +164,7 @@ export const useProcedures = () => {
   )
 
   useEffect(() => {
-    fetchProcedures()
+    void fetchProcedures()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
