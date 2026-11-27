@@ -58,6 +58,40 @@ interface ChatConversationProps {
    * Avança para a próxima etapa.
    */
   onNext?: () => void
+
+  // ========================================
+  // ERRO E TIMEOUT (ISSUE #53)
+  // ========================================
+
+  /**
+   * Mensagem de erro, se houver.
+   */
+  error?: string | null
+
+  /**
+   * Indica que a IA está demorando mais que o esperado.
+   */
+  isTimedOut?: boolean
+
+  /**
+   * Reenvia a última mensagem que falhou.
+   */
+  onRetry?: () => void
+
+  /**
+   * Limpa o erro exibido.
+   */
+  onClearError?: () => void
+
+  /**
+   * Dispensa o aviso de timeout.
+   */
+  onDismissTimeout?: () => void
+
+  /**
+   * Alterna para o modo de preenchimento manual.
+   */
+  onManualFallback?: () => void
 }
 
 // ========================================
@@ -78,6 +112,12 @@ export default function ChatConversation({
   isCompleted,
   onFinishConversation,
   onNext,
+  error,
+  isTimedOut,
+  onRetry,
+  onClearError,
+  onDismissTimeout,
+  onManualFallback,
 }: ChatConversationProps) {
   // ========================================
   // REFERÊNCIA DO SCROLL
@@ -164,6 +204,7 @@ export default function ChatConversation({
               sender={message.sender}
               message={message.message}
               timestamp={message.timestamp}
+              dataSource={message.dataSource}
             />
           ))}
 
@@ -177,6 +218,131 @@ export default function ChatConversation({
               aria-live="polite"
             >
               Soberana AI está digitando...
+            </div>
+          )}
+
+          {/* ====================================
+              AVISO DE TIMEOUT (ISSUE #53)
+              ==================================== */}
+
+          {isTimedOut && isTyping && (
+            <div
+              role="alert"
+              style={{
+                margin: '0.5rem 0',
+                padding: '0.75rem 1rem',
+                backgroundColor: '#fffbeb',
+                border: '1px solid #fbbf24',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                color: '#92400e',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '0.5rem',
+              }}
+            >
+              <span>
+                A IA está demorando mais que o esperado. Aguarde ou
+                tente novamente.
+              </span>
+              {onDismissTimeout && (
+                <button
+                  type="button"
+                  onClick={onDismissTimeout}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#92400e',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Dispensar
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* ====================================
+              ERRO (ISSUE #53)
+              ==================================== */}
+
+          {error && (
+            <div
+              role="alert"
+              style={{
+                margin: '0.5rem 0',
+                padding: '0.75rem 1rem',
+                backgroundColor: '#fef2f2',
+                border: '1px solid #fca5a5',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                color: '#991b1b',
+              }}
+            >
+              <p style={{ margin: '0 0 0.5rem' }}>{error}</p>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  alignItems: 'center',
+                }}
+              >
+                {onRetry && (
+                  <button
+                    type="button"
+                    onClick={onRetry}
+                    style={{
+                      padding: '0.25rem 0.75rem',
+                      fontSize: '0.8125rem',
+                      backgroundColor: '#991b1b',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '0.25rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Tentar novamente
+                  </button>
+                )}
+                {onClearError && (
+                  <button
+                    type="button"
+                    onClick={onClearError}
+                    style={{
+                      padding: '0.25rem 0.75rem',
+                      fontSize: '0.8125rem',
+                      backgroundColor: 'transparent',
+                      color: '#991b1b',
+                      border: '1px solid #fca5a5',
+                      borderRadius: '0.25rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Dispensar
+                  </button>
+                )}
+                {onManualFallback && (
+                  <button
+                    type="button"
+                    onClick={onManualFallback}
+                    style={{
+                      padding: '0.25rem 0.75rem',
+                      fontSize: '0.8125rem',
+                      backgroundColor: 'transparent',
+                      color: '#4f46e5',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textDecoration: 'underline',
+                    }}
+                  >
+                    Preencher manualmente
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
@@ -212,6 +378,27 @@ export default function ChatConversation({
           ==================================== */}
 
       <div className="chat-conversation__footer">
+        {/* ====================================
+            FALLBACK MANUAL (ISSUE #52)
+            ==================================== */}
+
+        {!isCompleted && onManualFallback && (
+          <button
+            type="button"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#4f46e5',
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              textDecoration: 'underline',
+            }}
+            onClick={onManualFallback}
+          >
+            Preencher manualmente
+          </button>
+        )}
+
         {/* ====================================
             FINALIZAR CONVERSA
             ==================================== */}
