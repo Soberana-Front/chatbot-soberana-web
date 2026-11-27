@@ -18,6 +18,21 @@ export const registerSchema = z
     phone: z.string().regex(/^\d{10,11}$/, 'Telefone inválido'),
     cpf: z.string().regex(/^\d{11}$/, 'CPF inválido'),
     userType: z.enum(['student', 'professional']).nullable(),
+    settings: z.object({
+      currency: z.enum(['BRL', 'USD', 'EUR']),
+      profitMargin: z
+        .number({ error: 'Informe a margem de lucro' })
+        .min(0, 'O valor não pode ser negativo')
+        .max(100, 'O valor não pode ser maior que 100%'),
+      taxRate: z
+        .number({ error: 'Informe a alíquota de impostos' })
+        .min(0, 'O valor não pode ser negativo')
+        .max(100, 'O valor não pode ser maior que 100%'),
+      cardFee: z
+        .number({ error: 'Informe a taxa de cartão' })
+        .min(0, 'O valor não pode ser negativo')
+        .max(100, 'O valor não pode ser maior que 100%'),
+    }),
     password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres'),
     passwordConfirmation: z.string().min(8, 'Confirme sua senha'),
     termsAccepted: z.boolean().refine((accepted) => accepted, 'Aceite os Termos de Uso para continuar'),
