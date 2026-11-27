@@ -1,4 +1,6 @@
 import React from 'react';
+import DataSourceBadge from '../DataSourceBadge/DataSourceBadge';
+import type { DataSourceType } from '../DataSourceBadge/DataSourceBadge';
 
 // Interface que define as props do componente
 export interface ChatMessageProps {
@@ -6,6 +8,7 @@ export interface ChatMessageProps {
   sender: 'user' | 'ia'; // Quem enviou: usuário ou IA
   timestamp?: string; // Horário da mensagem (opcional)
   avatar?: string; // URL da imagem do avatar (opcional)
+  dataSource?: DataSourceType; // Origem dos dados (Issue #50)
 }
 
 // Componente que exibe uma única mensagem no chat
@@ -14,6 +17,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   sender,
   timestamp,
   avatar,
+  dataSource,
 }) => {
   // Define se a mensagem é do usuário (true) ou da IA (false)
   const isUser = sender === 'user';
@@ -41,6 +45,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         {/* Balão com estilo diferenciado por sender */}
         <div className={`chat-bubble ${isUser ? 'chat-bubble-user' : 'chat-bubble-ia'}`}>
           <p className="chat-bubble-text">{message}</p>
+          {dataSource && (
+            <div style={{ marginTop: '0.25rem' }}>
+              <DataSourceBadge type={dataSource} />
+            </div>
+          )}
         </div>
 
         {/* Timestamp (horário) - exibido abaixo do balão */}

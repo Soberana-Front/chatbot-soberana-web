@@ -38,6 +38,7 @@ export interface ChatMessage {
   message: string
   sender: 'user' | 'ia'
   timestamp: string
+  dataSource?: 'manual' | 'suggested' | 'confirmed' | 'rejected'
 }
 
 /**
