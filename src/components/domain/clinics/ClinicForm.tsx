@@ -4,35 +4,59 @@ import { zodResolver } from '@hookform/resolvers/zod'
 // Importa componentes de UI já existentes
 import { Input } from '../../ui/Input'
 import { Select } from '../../ui/Select'
-// Importa schema, tipos e listas de opções
+// Importa schema, tipos e listas de opções alinhadas com o backend
 import {
   clinicSchema,
   BRAZILIAN_STATES,
   CLINIC_TYPES,
-  type ClinicFormInput,
-  type ClinicFormOutput,
+  CLINIC_TYPE_LABELS,
+  MATERIAL_SUPPLIER_OPTIONS,
+  MATERIAL_SUPPLIER_LABELS,
+  PAYMENT_METHOD_OPTIONS,
+  PAYMENT_METHOD_LABELS,
+  type ClinicFormData,
 } from '../../../validations/clinicSchema'
 
 // Props do ClinicForm
 export interface ClinicFormProps {
-  formId?: string                              // id do <form>, usado pelo botão de submit no ModalFooter (Issue #47)
-  defaultValues?: Partial<ClinicFormInput>       // valores iniciais (modo edição)
-  onSubmit: (data: ClinicFormOutput) => void     // chamado com os dados já validados e convertidos
+  formId?: string                              // id do <form>, usado pelo botão de submit no ModalFooter
+  defaultValues?: Partial<ClinicFormData>       // valores iniciais (modo edição)
+  onSubmit: (data: ClinicFormData) => void      // chamado com os dados já validados
 }
 
 // Opções de Estado geradas a partir da lista de UFs
 const stateOptions = BRAZILIAN_STATES.map((uf) => ({ value: uf, label: uf }))
 
-// Opções de Tipo geradas a partir da lista de tipos de clínica
-const typeOptions = CLINIC_TYPES.map((type) => ({ value: type, label: type }))
+// Opções de Tipo de Clínica alinhadas com o backend (OWN | OUTSOURCED)
+const clinicTypeOptions = CLINIC_TYPES.map((type) => ({
+  value: type,
+  label: CLINIC_TYPE_LABELS[type] ?? type,
+}))
+
+// Opções de Fornecedor de Materiais
+const materialSupplierOptions = MATERIAL_SUPPLIER_OPTIONS.map((supplier) => ({
+  value: supplier,
+  label: MATERIAL_SUPPLIER_LABELS[supplier] ?? supplier,
+}))
+
+// Opções de Método de Pagamento
+const paymentMethodOptions = PAYMENT_METHOD_OPTIONS.map((method) => ({
+  value: method,
+  label: PAYMENT_METHOD_LABELS[method] ?? method,
+}))
 
 /**
- * Formulário com os campos de uma clínica (Issue #46).
+ * Formulário com os campos de uma clínica.
+ * Alinhado com o contrato real do backend (Clinic_Create).
  *
- * Não tem botões próprios de "Salvar"/"Cancelar" — quem exibe os botões
- * é o ClinicModal (Issue #47), usando o atributo `form={formId}` no botão
- * de submit para disparar este formulário de fora dele. Isso deixa o
- * mesmo ClinicForm reutilizável tanto pra criar quanto pra editar.
+ * Campos alterados em relação à versão anterior:
+ * - `type` → `clinicType` (enum OWN | OUTSOURCED)
+ * - `commission` → `commissionPercentage` (0-100%)
+ * - `rent` → `rentAmount` (number, R$)
+ * - `costs` → `otherExpenses` (number, R$)
+ * - Adicionados: `materialSupplier`, `paymentMethod`, `notes`
+ *
+ * Não tem botões próprios — o ClinicModal dispara o submit via form={formId}.
  */
 export const ClinicForm = ({
   formId = 'clinic-form',
@@ -42,11 +66,15 @@ export const ClinicForm = ({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
-  } = useForm<ClinicFormInput, unknown, ClinicFormOutput>({
+  } = useForm<ClinicFormData>({
     resolver: zodResolver(clinicSchema),
     defaultValues,
   })
+
+  // Observa o método de pagamento para mostrar/ocultar o campo de comissão
+  const paymentMethod = watch('paymentMethod')
 
   return (
     <form id={formId} onSubmit={handleSubmit(onSubmit)} className="clinic-form">
@@ -78,53 +106,95 @@ export const ClinicForm = ({
         />
       </div>
 
-      {/* Endereço */}
+      {/* Endereço (opcional) */}
       <Input
         label="Endereço"
-        placeholder="Rua, número, bairro"
+        placeholder="Rua, número, bairro (opcional)"
         error={errors.address?.message}
-        required
+        optional
         {...register('address')}
       />
 
-      {/* Tipo */}
-      <Select
-        label="Tipo"
-        placeholder="Selecione o tipo"
-        options={typeOptions}
-        error={errors.type?.message}
-        required
-        {...register('type')}
-      />
-
-      {/* Comissão, Aluguel e Custos lado a lado */}
-      <div className="clinic-form-row clinic-form-row-three">
-        <Input
-          label="Comissão"
-          type="number"
-          placeholder="0"
-          rightIcon={<span className="clinic-form-suffix">%</span>}
-          error={errors.commission?.message}
+      {/* Tipo da Clínica e Fornecedor de Materiais lado a lado */}
+      <div className="clinic-form-row">
+        <Select
+          label="Tipo da Clínica"
+          placeholder="Selecione"
+          options={clinicTypeOptions}
+          error={errors.clinicType?.message}
           required
-          {...register('commission', { valueAsNumber: true })}
+          {...register('clinicType')}
         />
-        <Input
-          label="Aluguel"
-          mask="currency"
-          placeholder="R$ 0,00"
-          error={errors.rent?.message}
+        <Select
+          label="Materiais"
+          placeholder="Quem fornece"
+          options={materialSupplierOptions}
+          error={errors.materialSupplier?.message}
           required
-          {...register('rent')}
-        />
-        <Input
-          label="Custos"
-          mask="currency"
-          placeholder="R$ 0,00"
-          error={errors.costs?.message}
-          required
-          {...register('costs')}
+          {...register('materialSupplier')}
         />
       </div>
+
+      {/* Método de Pagamento */}
+      <Select
+        label="Método de Pagamento"
+        placeholder="Selecione o método"
+        options={paymentMethodOptions}
+        error={errors.paymentMethod?.message}
+        required
+        {...register('paymentMethod')}
+      />
+
+      {/* Comissão — só aparece quando o método for COMMISSION */}
+      {paymentMethod === 'COMMISSION' && (
+        <Input
+          label="Comissão (%)"
+          type="number"
+          placeholder="0"
+          step="0.01"
+          min={0}
+          max={100}
+          rightIcon={<span className="clinic-form-suffix">%</span>}
+          error={errors.commissionPercentage?.message}
+          required
+          {...register('commissionPercentage', { valueAsNumber: true })}
+        />
+      )}
+
+      {/* Aluguel — só aparece quando o método for MONTHLY_RENT */}
+      {paymentMethod === 'MONTHLY_RENT' && (
+        <Input
+          label="Valor do Aluguel (R$)"
+          type="number"
+          placeholder="0.00"
+          step="0.01"
+          min={0}
+          error={errors.rentAmount?.message}
+          required
+          {...register('rentAmount', { valueAsNumber: true })}
+        />
+      )}
+
+      {/* Outras Despesas */}
+      <Input
+        label="Outras Despesas (R$)"
+        type="number"
+        placeholder="0.00"
+        step="0.01"
+        min={0}
+        error={errors.otherExpenses?.message}
+        optional
+        {...register('otherExpenses', { valueAsNumber: true })}
+      />
+
+      {/* Observações (opcional) */}
+      <Input
+        label="Observações"
+        placeholder="Informações adicionais (opcional)"
+        error={errors.notes?.message}
+        optional
+        {...register('notes')}
+      />
     </form>
   )
 }

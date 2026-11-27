@@ -9,20 +9,18 @@ import { ClinicTable } from '../../components/domain/clinics/ClinicTable'
 import { ClinicModal } from '../../components/domain/clinics/ClinicModal'
 import { Button } from '../../components/ui/Button'
 import { ErrorState } from '../../components/ui/AsyncStates'
-// Importa o hook de estado de clínicas (Issue #50)
+import { DeleteConfirmation } from '../../components/ui/DeleteConfirmation'
+// Importa o hook de estado de clínicas
 import { useClinics } from '../../hooks/useClinics'
-import type { Clinic } from '../../services/clinicService'
-import type { ClinicFormOutput } from '../../validations/clinicSchema'
-import { DeleteConfirmation } from '@/components/ui'
-export { DeleteConfirmation } from '../../components/ui/DeleteConfirmation';
+import type { ClinicSummary } from '../../hooks/useClinics'
+import type { ClinicFormData } from '../../validations/clinicSchema'
 
 /**
- * Página de listagem de Clínicas (Issue #45).
+ * Página de listagem de Clínicas.
  *
- * Junta todas as peças construídas nas issues anteriores: SearchBar (#58),
- * Pagination (#59), ClinicTable (#48), ClinicForm+ClinicModal (#46/#47) e
- * useClinics (#50). Esta página é quem decide o que fazer com os eventos
- * que os componentes "burros" disparam (abrir modal, confirmar exclusão etc).
+ * Integração real com o backend via GET /clinics (listagem resumida),
+ * POST /clinics (criação), PATCH /clinics/:id (edição) e DELETE /clinics/:id.
+ * Alinhada com o contrato real do backend (issues #28, #29, #30).
  */
 export const ClinicsPage = () => {
   const {
@@ -39,9 +37,8 @@ export const ClinicsPage = () => {
   } = useClinics()
 
   // Controla se a modal está aberta e qual clínica está sendo editada
-  // (null = modo criação, uma Clinic = modo edição)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingClinic, setEditingClinic] = useState<Clinic | null>(null)
+  const [editingClinic, setEditingClinic] = useState<ClinicSummary | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Abre a modal em modo criação (botão "Cadastrar")
@@ -51,13 +48,13 @@ export const ClinicsPage = () => {
   }
 
   // Abre a modal em modo edição (ícone de lápis na tabela)
-  const handleOpenEditModal = (clinic: Clinic) => {
+  const handleOpenEditModal = (clinic: ClinicSummary) => {
     setEditingClinic(clinic)
     setIsModalOpen(true)
   }
 
   // Submissão do formulário: decide entre criar ou editar, e fecha a modal ao final
-  const handleSubmit = async (data: ClinicFormOutput) => {
+  const handleSubmit = async (data: ClinicFormData) => {
     setIsSubmitting(true)
     try {
       if (editingClinic) {
@@ -73,24 +70,13 @@ export const ClinicsPage = () => {
     }
   }
 
-  // Exclusão: por enquanto usa window.confirm como confirmação temporária.
-  // Quando a Issue #49 (DeleteConfirmation) estiver pronta, troco isso pela modal de verdade.
-  /* Antes
-    const handleDelete = async (clinic: Clinic) => {
-    const confirmed = window.confirm(`Tem certeza que deseja excluir ${clinic.name}?`)
-    if (!confirmed) return
-    await deleteClinic(clinic.id)
-  }*/
-  // DEPOIS
-  // Substitui o window.confirm por um estado que controla a modal de exclusão
-  const [deletingClinic, setDeletingClinic] = useState<Clinic | null>(null)
+  // Controla a modal de confirmação de exclusão
+  const [deletingClinic, setDeletingClinic] = useState<ClinicSummary | null>(null)
 
-  // Chamado pelo ícone de lixeira na ClinicTable — só abre a modal
-  const handleDeleteClick = (clinic: Clinic) => {
+  const handleDeleteClick = (clinic: ClinicSummary) => {
     setDeletingClinic(clinic)
   }
 
-  // Chamado pelo botão "Confirmar" dentro do DeleteConfirmation
   const handleConfirmDelete = async () => {
     if (!deletingClinic) return
     await deleteClinic(deletingClinic.id)
@@ -111,7 +97,7 @@ export const ClinicsPage = () => {
           </Button>
         </div>
 
-        {/* Barra de pesquisa (filtro local, Issue #58) */}
+        {/* Barra de pesquisa (filtro local) */}
         <div className="clinics-page-toolbar">
           <SearchBar
             value={search}
@@ -123,7 +109,7 @@ export const ClinicsPage = () => {
         {/* Mensagem de erro (ex: falha ao criar/editar/excluir) */}
         {error && <ErrorState message={error} />}
 
-        {/* Tabela com dados mockados/paginados (Issue #48) */}
+        {/* Tabela com dados da API */}
         <ClinicTable
           clinics={clinics}
           isLoading={isLoading}
@@ -131,7 +117,7 @@ export const ClinicsPage = () => {
           onDelete={handleDeleteClick}
         />
 
-        {/* Paginação (Issue #59) */}
+        {/* Paginação local */}
         <Pagination
           currentPage={pagination.page}
           totalPages={pagination.totalPages}
@@ -139,7 +125,7 @@ export const ClinicsPage = () => {
         />
       </div>
 
-      {/* Modal de criação/edição (Issue #47) */}
+      {/* Modal de criação/edição */}
       <ClinicModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
@@ -148,7 +134,7 @@ export const ClinicsPage = () => {
         isSubmitting={isSubmitting}
       />
 
-      {/* Modal de confirmação de exclusão (Issue #49) */}
+      {/* Modal de confirmação de exclusão */}
       <DeleteConfirmation
         open={Boolean(deletingClinic)}
         onOpenChange={(open: boolean) => !open && setDeletingClinic(null)}

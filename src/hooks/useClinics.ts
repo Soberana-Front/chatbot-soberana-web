@@ -1,38 +1,33 @@
 // Importa hooks do React
 import { useState, useEffect, useCallback } from 'react'
-// Importa o serviço e os tipos de clínica
+// Importa o serviço e os tipos de clínica (alinhados com o backend)
 import { clinicService } from '../services/clinicService'
-import type { Clinic, ClinicPayload, GetClinicsParams } from '../services/clinicService'
+import type { Clinic, ClinicSummary, ClinicPayload } from '../services/clinicService'
+import type { ClinicFormData } from '../validations/clinicSchema'
 
-// Estado de paginação exposto pelo hook
+// Estado de paginação exposto pelo hook (paginação local, já que o backend não pagina)
 export interface ClinicsPagination {
   page: number
   totalPages: number
   totalItems: number
 }
 
-// Dados mockados usados enquanto a API real (Issue #51) não está disponível.
-// Isso permite montar e testar a tela (Issue #45) sem depender do backend.
-const MOCK_CLINICS: Clinic[] = [
-  { id: '1', name: 'Clínica Odonto Prime', city: 'Juiz de Fora', state: 'MG', address: 'Rua A, 100', type: 'Odontologia', commission: 10, rent: 3500, costs: 1200 },
-  { id: '2', name: 'Soberana Odontologia', city: 'Belo Horizonte', state: 'MG', address: 'Av. B, 200', type: 'Multiespecialidade', commission: 12, rent: 5200, costs: 1800 },
-  { id: '3', name: 'Sorriso & Saúde', city: 'São Paulo', state: 'SP', address: 'Rua C, 300', type: 'Clínico Geral', commission: 8, rent: 4100, costs: 1500 },
-]
-
 const PAGE_SIZE = 10
 
 /**
- * Hook responsável pelo estado e pelas operações de Clínicas (Issue #50).
+ * Hook responsável pelo estado e pelas operações de Clínicas.
+ * Alinhado com o contrato real do backend.
  *
- * Segue o mesmo formato de useDashboardData.ts já usado no projeto:
- * loading/error/data no estado, e async/await + try/catch em toda
- * operação que mexe com o "servidor" (aqui, ainda mockado).
+ * A listagem usa GET /clinics (retorna ClinicSummary[]).
+ * Criação/edição usam os tipos completos (Clinic).
+ * A paginação é feita localmente (o backend não pagina).
+ * O filtro de texto também é local (o backend filtra por nome via query).
  */
 export const useClinics = () => {
-  // Lista completa (mock) — base para filtro e paginação locais
-  const [allClinics, setAllClinics] = useState<Clinic[]>(MOCK_CLINICS)
+  // Lista completa — base para filtro e paginação locais
+  const [allClinics, setAllClinics] = useState<ClinicSummary[]>([])
   // Lista já filtrada/paginada, exibida na tabela
-  const [clinics, setClinics] = useState<Clinic[]>([])
+  const [clinics, setClinics] = useState<ClinicSummary[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState<string>('')
@@ -44,7 +39,7 @@ export const useClinics = () => {
 
   // Aplica filtro de texto (nome, cidade, estado) e paginação sobre allClinics
   const applyFilterAndPagination = useCallback(
-    (source: Clinic[], searchTerm: string, page: number) => {
+    (source: ClinicSummary[], searchTerm: string, page: number) => {
       const term = searchTerm.trim().toLowerCase()
 
       const filtered = term
@@ -68,31 +63,23 @@ export const useClinics = () => {
     []
   )
 
-  // Carrega as clínicas (hoje mockado; troca para clinicService.getClinics quando a API #51 estiver pronta)
-  const fetchClinics = useCallback(
-    async (params?: GetClinicsParams) => {
-      setIsLoading(true)
-      setError(null)
+  // Carrega as clínicas da API real (GET /clinics)
+  const fetchClinics = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
 
-      try {
-        // --- Quando a API estiver pronta, substituir o bloco abaixo por: ---
-        // const response = await clinicService.getClinics(params)
-        // setAllClinics(response.data)
-        // setPagination({ page: response.page, totalPages: response.totalPages, totalItems: response.totalItems })
+    try {
+      const data = await clinicService.getClinics()
+      setAllClinics(data)
+      applyFilterAndPagination(data, search, 1)
+    } catch {
+      setError('Erro ao carregar as clínicas. Verifique sua conexão e tente novamente.')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [applyFilterAndPagination, search])
 
-        // Simula delay de rede para o mock
-        await new Promise((resolve) => setTimeout(resolve, 300))
-        applyFilterAndPagination(MOCK_CLINICS, params?.search ?? search, params?.page ?? 1)
-      } catch (err) {
-        setError('Erro ao carregar as clínicas. Tente novamente.')
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [applyFilterAndPagination, search]
-  )
-
-  // Atualiza o termo de busca e reaplica filtro/paginação (volta pra página 1)
+  // Atualiza o termo de busca e reaplica filtro/paginação (volta para página 1)
   const filterClinics = useCallback(
     (term: string) => {
       setSearch(term)
@@ -109,56 +96,92 @@ export const useClinics = () => {
     [allClinics, search, applyFilterAndPagination]
   )
 
-  // Cria uma clínica nova (mockado por enquanto)
+  /**
+   * Cria uma clínica nova via POST /clinics.
+   * O formulário envia commissionPercentage em 0-100%;
+   * o backend espera fração 0.0-1.0.
+   */
   const createClinic = useCallback(
-    async (data: ClinicPayload) => {
+    async (data: ClinicFormData) => {
       setError(null)
       try {
-        // Quando a API estiver pronta: const created = await clinicService.createClinic(data)
-        const created: Clinic = { id: crypto.randomUUID(), ...data }
-        const updated = [created, ...allClinics]
-        setAllClinics(updated)
-        applyFilterAndPagination(updated, search, 1)
-        return created
-      } catch (err) {
-        setError('Erro ao criar a clínica. Tente novamente.')
-        throw err
-      }
-    },
-    [allClinics, search, applyFilterAndPagination]
-  )
-
-  // Edita uma clínica existente (mockado por enquanto)
-  const updateClinic = useCallback(
-    async (id: string, data: ClinicPayload) => {
-      setError(null)
-      try {
-        // Quando a API estiver pronta: await clinicService.updateClinic(id, data)
-        const updated = allClinics.map((clinic) =>
-          clinic.id === id ? { ...clinic, ...data } : clinic
-        )
+        const payload: ClinicPayload = {
+          ...data,
+          // Converte % (0-100) → fração (0.0-1.0) para o backend
+          commissionPercentage:
+            data.commissionPercentage !== undefined
+              ? data.commissionPercentage / 100
+              : undefined,
+          address: data.address || undefined,
+          notes: data.notes || undefined,
+        }
+        const created = await clinicService.createClinic(payload)
+        // Adiciona ao topo da lista (resumo) e reaplica filtro
+        const summary: ClinicSummary = {
+          id: created.id,
+          name: created.name,
+          city: created.city,
+          state: created.state,
+        }
+        const updated = [summary, ...allClinics]
         setAllClinics(updated)
         applyFilterAndPagination(updated, search, pagination.page)
-      } catch (err) {
-        setError('Erro ao atualizar a clínica. Tente novamente.')
-        throw err
+      } catch {
+        setError('Erro ao cadastrar a clínica. Tente novamente.')
+        throw new Error('Erro ao cadastrar a clínica.')
       }
     },
     [allClinics, search, pagination.page, applyFilterAndPagination]
   )
 
-  // Exclui uma clínica (mockado por enquanto)
+  /**
+   * Atualiza uma clínica via PATCH /clinics/:id.
+   * Recarrega a listagem após a atualização.
+   */
+  const updateClinic = useCallback(
+    async (id: string, data: ClinicFormData) => {
+      setError(null)
+      try {
+        const payload: Partial<ClinicPayload> = {
+          ...data,
+          commissionPercentage:
+            data.commissionPercentage !== undefined
+              ? data.commissionPercentage / 100
+              : undefined,
+          address: data.address || undefined,
+          notes: data.notes || undefined,
+        }
+        const updated = await clinicService.updateClinic(id, payload)
+        // Atualiza o item na lista local
+        const summary: ClinicSummary = {
+          id: updated.id,
+          name: updated.name,
+          city: updated.city,
+          state: updated.state,
+        }
+        const updatedList = allClinics.map((c) => (c.id === id ? summary : c))
+        setAllClinics(updatedList)
+        applyFilterAndPagination(updatedList, search, pagination.page)
+      } catch {
+        setError('Erro ao editar a clínica. Tente novamente.')
+        throw new Error('Erro ao editar a clínica.')
+      }
+    },
+    [allClinics, search, pagination.page, applyFilterAndPagination]
+  )
+
+  // Exclui uma clínica via DELETE /clinics/:id
   const deleteClinic = useCallback(
     async (id: string) => {
       setError(null)
       try {
-        // Quando a API estiver pronta: await clinicService.deleteClinic(id)
-        const updated = allClinics.filter((clinic) => clinic.id !== id)
+        await clinicService.deleteClinic(id)
+        const updated = allClinics.filter((c) => c.id !== id)
         setAllClinics(updated)
         applyFilterAndPagination(updated, search, pagination.page)
-      } catch (err) {
+      } catch {
         setError('Erro ao excluir a clínica. Tente novamente.')
-        throw err
+        throw new Error('Erro ao excluir a clínica.')
       }
     },
     [allClinics, search, pagination.page, applyFilterAndPagination]
@@ -185,7 +208,5 @@ export const useClinics = () => {
   }
 }
 
-/*
-é quem realmente trata o erro — captura no catch, guarda uma mensagem amigável em error (estado exposto pro componente exibir), e usa finally pra garantir que isLoading sempre volte a false, mesmo se der erro.
- 
-*/
+// Re-exporta os tipos necessários para a ClinicsPage e ClinicModal
+export type { Clinic, ClinicSummary }

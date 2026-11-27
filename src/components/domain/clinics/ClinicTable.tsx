@@ -1,25 +1,21 @@
-// Importa ícones de editar/excluir e utilitário de formatação de moeda
+// Importa ícones de ação
 import { Pencil, Trash2 } from 'lucide-react'
-import { formatCurrency } from '../../../utils/formatCurrency'
-// Importa o tipo de Clínica já definido no service (Issue #51)
-import type { Clinic } from '../../../services/clinicService'
+// Importa o tipo de resumo de clínica (GET /clinics retorna só id, name, city, state)
+import type { ClinicSummary } from '../../../hooks/useClinics'
 import { EmptyState } from '../../ui/EmptyState'
 
 // Props do componente ClinicTable
 export interface ClinicTableProps {
-  clinics: Clinic[]                 // Lista de clínicas já filtrada/paginada (vem do useClinics)
-  isLoading?: boolean                // Exibe estado de carregamento
-  onEdit: (clinic: Clinic) => void   // Chamado ao clicar no ícone de editar
-  onDelete: (clinic: Clinic) => void // Chamado ao clicar no ícone de excluir
+  clinics: ClinicSummary[]                    // Lista de clínicas já filtrada/paginada (vem do useClinics)
+  isLoading?: boolean                          // Exibe estado de carregamento
+  onEdit: (clinic: ClinicSummary) => void     // Chamado ao clicar no ícone de editar
+  onDelete: (clinic: ClinicSummary) => void   // Chamado ao clicar no ícone de excluir
 }
 
 /**
- * Tabela de clínicas com ações de editar/excluir (Issue #48).
- *
- * Este componente é "burro": só recebe a lista já pronta (filtrada e
- * paginada pelo useClinics) e mostra. Não decide o que acontece ao clicar
- * em editar/excluir — apenas chama onEdit/onDelete, e quem usa a tabela
- * (a página de Clínicas) decide abrir o ClinicModal ou o DeleteConfirmation.
+ * Tabela de clínicas com ações de editar/excluir.
+ * Usa ClinicSummary (listagem resumida: id, name, city, state)
+ * conforme o contrato real do GET /clinics.
  */
 export const ClinicTable = ({
   clinics,
@@ -27,7 +23,7 @@ export const ClinicTable = ({
   onEdit,
   onDelete,
 }: ClinicTableProps) => {
-  // Estado de carregamento: mostra uma linha única com mensagem
+  // Estado de carregamento
   if (isLoading) {
     return (
       <div className="clinic-table-wrapper">
@@ -36,12 +32,7 @@ export const ClinicTable = ({
     )
   }
 
-  // Lista vazia: mostra mensagem simples.
-  /*<div className="clinic-table-wrapper">
-        <div className="clinic-table-status">Nenhuma clínica encontrada.</div>
-      </div> */
-  // (Quando a Issue #60 - EmptyState - estiver pronta, trocar este bloco
-  // pelo componente <EmptyState /> reutilizável.)
+  // Lista vazia
   if (clinics.length === 0) {
     return (
       <div className="clinic-table-wrapper">
@@ -56,17 +47,12 @@ export const ClinicTable = ({
   return (
     <div className="clinic-table-wrapper">
       <table className="clinic-table">
-        {/* Cabeçalho com todas as colunas pedidas na Issue #45/#48 */}
+        {/* Cabeçalho — colunas disponíveis na listagem resumida do backend */}
         <thead className="clinic-table-head">
           <tr>
             <th className="clinic-table-th">Nome</th>
             <th className="clinic-table-th">Cidade</th>
             <th className="clinic-table-th">Estado</th>
-            <th className="clinic-table-th">Endereço</th>
-            <th className="clinic-table-th">Tipo</th>
-            <th className="clinic-table-th clinic-table-th-right">Comissão</th>
-            <th className="clinic-table-th clinic-table-th-right">Aluguel</th>
-            <th className="clinic-table-th clinic-table-th-right">Custos</th>
             <th className="clinic-table-th clinic-table-th-center">Ações</th>
           </tr>
         </thead>
@@ -77,21 +63,6 @@ export const ClinicTable = ({
               <td className="clinic-table-td clinic-table-td-name">{clinic.name}</td>
               <td className="clinic-table-td">{clinic.city}</td>
               <td className="clinic-table-td">{clinic.state}</td>
-              <td className="clinic-table-td">{clinic.address}</td>
-              <td className="clinic-table-td">{clinic.type}</td>
-
-              {/* Comissão formatada com % */}
-              <td className="clinic-table-td clinic-table-td-right">
-                {clinic.commission}%
-              </td>
-
-              {/* Aluguel e Custos formatados em R$ (reaproveita formatCurrency já usado no dashboard) */}
-              <td className="clinic-table-td clinic-table-td-right">
-                {formatCurrency(clinic.rent)}
-              </td>
-              <td className="clinic-table-td clinic-table-td-right">
-                {formatCurrency(clinic.costs)}
-              </td>
 
               {/* Ações: editar (lápis) e excluir (lixeira) */}
               <td className="clinic-table-td clinic-table-td-center">

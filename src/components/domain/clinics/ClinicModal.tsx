@@ -2,27 +2,29 @@
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../ui/Modal'
 import { Button } from '../../ui/Button'
 import { ClinicForm } from './ClinicForm'
-// Importa tipos e utilitário de formatação de moeda
-import type { Clinic } from '../../../services/clinicService'
-import type { ClinicFormOutput } from '../../../validations/clinicSchema'
-import { formatCurrency } from '../../../utils/formatCurrency'
+// Importa tipos necessários
+import type { ClinicSummary } from '../../../hooks/useClinics'
+import type { ClinicFormData } from '../../../validations/clinicSchema'
 
 // Props da ClinicModal
 export interface ClinicModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  clinic?: Clinic | null                          // presente = modo edição; ausente/null = modo criação
-  onSubmit: (data: ClinicFormOutput) => void | Promise<void>
-  isSubmitting?: boolean                            // desabilita os botões durante o envio
+  clinic?: ClinicSummary | null                        // presente = modo edição; ausente/null = modo criação
+  onSubmit: (data: ClinicFormData) => void | Promise<void>
+  isSubmitting?: boolean                                // desabilita os botões durante o envio
 }
 
 /**
- * Modal com o ClinicForm dentro, reutilizável para criar ou editar (Issue #47).
+ * Modal com o ClinicForm dentro, reutilizável para criar ou editar.
  *
- * O título e os valores iniciais mudam conforme a presença de `clinic`.
+ * No modo edição, recebe um ClinicSummary (listagem) com id, name, city, state.
+ * Para editar os campos completos (clinicType, paymentMethod, etc.),
+ * o ClinicForm abre com os campos vazios para o usuário preencher,
+ * pois a listagem resumida não inclui esses dados.
+ *
  * O botão "Salvar" fica no rodapé (ModalFooter), fora da tag <form>, e
- * dispara o submit através do atributo form={formId} — por isso o
- * ClinicForm expõe essa prop.
+ * dispara o submit através do atributo form={formId}.
  */
 export const ClinicModal = ({
   open,
@@ -34,38 +36,28 @@ export const ClinicModal = ({
   const isEditMode = Boolean(clinic)
   const formId = 'clinic-form'
 
-  // Fecha a modal ao clicar em "Cancelar"
   const handleCancel = () => {
     onOpenChange(false)
   }
 
-  // Monta os valores iniciais do formulário a partir da clínica (modo edição)
-  // Convertendo rent/costs de number para a string formatada que o Input espera
-  const defaultValues = clinic
+  // No modo edição: pré-preenche apenas os campos disponíveis no resumo
+  const defaultValues: Partial<ClinicFormData> | undefined = clinic
     ? {
         name: clinic.name,
         city: clinic.city,
-        // clinic.state e clinic.type agora já são BrazilianState/ClinicType
-      // (mesmos tipos literais do formulário), então não precisam mais de "as any"
         state: clinic.state,
-        address: clinic.address,
-        type: clinic.type,
-        commission: clinic.commission,
-        rent: formatCurrency(clinic.rent),
-        costs: formatCurrency(clinic.costs),
       }
     : undefined
 
   return (
     <Modal open={open} onOpenChange={onOpenChange} size="lg">
-      {/* Título dinâmico: "Nova Clínica" ou "Editar Clínica" */}
+      {/* Título dinâmico */}
       <ModalHeader>
         {isEditMode ? 'Editar Clínica' : 'Nova Clínica'}
       </ModalHeader>
 
       <ModalBody>
-        {/* A key força o formulário a remontar (resetar) ao trocar de clínica
-            ou ao alternar entre criar/editar, garantindo defaultValues corretos */}
+        {/* A key força o formulário a remontar ao trocar de clínica */}
         <ClinicForm
           key={clinic?.id ?? 'new'}
           formId={formId}
