@@ -19,6 +19,7 @@ export type ProcedureCategory = (typeof PROCEDURE_CATEGORIES)[number]
 // Usa a API do Zod v4 (parâmetro "error" unificado) — o projeto tem
 // zod@4.4.3 instalado, e a API antiga (errorMap/invalid_type_error) não existe mais nela
 export const procedureSchema = z.object({
+  clinicId: z.string().optional(),
   name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres'),
   category: z.enum(PROCEDURE_CATEGORIES, {
     error: 'Selecione uma categoria',

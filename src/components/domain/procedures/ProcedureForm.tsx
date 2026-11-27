@@ -17,6 +17,7 @@ export interface ProcedureFormProps {
   formId?: string                                  // id do <form>, usado pelo botão de submit no ModalFooter (Issue #54)
   defaultValues?: Partial<ProcedureFormData>         // valores iniciais (modo edição)
   onSubmit: (data: ProcedureFormData) => void        // chamado com os dados já validados
+  clinicOptions?: Array<{ value: string; label: string }> // lista de clínicas do usuário (Issue #34)
 }
 
 // Opções de Categoria geradas a partir da lista de categorias
@@ -26,16 +27,20 @@ const categoryOptions = PROCEDURE_CATEGORIES.map((category) => ({
 }))
 
 /**
- * Formulário com os campos de um procedimento (Issue #53).
+ * Formulário com os campos de um procedimento (Issue #34 - FE-021).
  *
- * Segue o mesmo padrão do ClinicForm (Issue #46): não tem botões próprios,
- * expõe um formId para o ProcedureModal (Issue #54) disparar o submit
- * de fora do <form>, via atributo form={formId} no botão.
+ * Alinhado com o contrato do backend:
+ * - clinicId: clínica à qual o procedimento pertence
+ * - name: nome do procedimento (mínimo 2 caracteres)
+ * - category: categoria do procedimento
+ * - time: tempo estimado em minutos
+ * - description: descrição detalhada (opcional)
  */
 export const ProcedureForm = ({
   formId = 'procedure-form',
   defaultValues,
   onSubmit,
+  clinicOptions,
 }: ProcedureFormProps) => {
   const {
     register,
@@ -47,7 +52,23 @@ export const ProcedureForm = ({
   })
 
   return (
-    <form id={formId} onSubmit={handleSubmit(onSubmit)} className="clinic-form">
+    <form
+      id={formId}
+      aria-label="Formulário de procedimento"
+      onSubmit={handleSubmit(onSubmit)}
+      className="clinic-form space-y-4"
+    >
+      {/* Seleção de Clínica (quando houver clínicas disponíveis) */}
+      {clinicOptions && clinicOptions.length > 0 && (
+        <Select
+          label="Clínica"
+          placeholder="Selecione a clínica"
+          options={clinicOptions}
+          error={errors.clinicId?.message}
+          {...register('clinicId')}
+        />
+      )}
+
       {/* Nome */}
       <Input
         label="Nome"

@@ -1,7 +1,9 @@
 // Importa componentes de UI já existentes
+import { useState, useEffect } from 'react'
 import { Modal, ModalHeader, ModalBody, ModalFooter } from '../../ui/Modal'
 import { Button } from '../../ui/Button'
 import { ProcedureForm } from './ProcedureForm'
+import { clinicService } from '../../../services/clinicService'
 // Importa tipos
 import type { Procedure } from '../../../services/procedureService'
 import type { ProcedureFormData } from '../../../validations/procedureSchema'
@@ -16,13 +18,7 @@ export interface ProcedureModalProps {
 }
 
 /**
- * Modal com o ProcedureForm dentro, reutilizável para criar ou editar (Issue #54).
- *
- * Estrutura idêntica ao ClinicModal (Issue #47). Diferente daquele caso,
- * aqui NÃO foi necessário nenhum "as any" ao montar defaultValues: como o
- * Procedure (procedureService.ts) já usa o mesmo tipo ProcedureCategory
- * que o ProcedureFormData (procedureSchema.ts) desde o início, os dois
- * lados são type-compatible diretamente.
+ * Modal com o ProcedureForm dentro, reutilizável para criar ou editar (Issue #34 - FE-021).
  */
 export const ProcedureModal = ({
   open,
@@ -31,8 +27,22 @@ export const ProcedureModal = ({
   onSubmit,
   isSubmitting = false,
 }: ProcedureModalProps) => {
+  const [clinicOptions, setClinicOptions] = useState<Array<{ value: string; label: string }>>([])
   const isEditMode = Boolean(procedure)
   const formId = 'procedure-form'
+
+  useEffect(() => {
+    if (open) {
+      clinicService
+        .getClinics()
+        .then((clinics) => {
+          setClinicOptions(clinics.map((c) => ({ value: c.id, label: c.name })))
+        })
+        .catch(() => {
+          setClinicOptions([])
+        })
+    }
+  }, [open])
 
   const handleCancel = () => {
     onOpenChange(false)
@@ -41,6 +51,7 @@ export const ProcedureModal = ({
   // Monta os valores iniciais do formulário a partir do procedimento (modo edição)
   const defaultValues = procedure
     ? {
+        clinicId: procedure.clinicId ?? undefined,
         name: procedure.name,
         category: procedure.category as ProcedureFormData['category'],
         time: procedure.time,
@@ -63,6 +74,7 @@ export const ProcedureModal = ({
           formId={formId}
           defaultValues={defaultValues}
           onSubmit={onSubmit}
+          clinicOptions={clinicOptions}
         />
       </ModalBody>
 

@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 // Importa o serviço e os tipos de procedimento
 import { procedureService } from '../services/procedureService'
+import { clinicService } from '../services/clinicService'
 import type { Procedure, ProcedurePayload, GetProceduresParams } from '../services/procedureService'
 
 // Estado de paginação exposto pelo hook
@@ -108,12 +109,22 @@ export const useProcedures = () => {
     [allProcedures, search, category, applyFilterAndPagination]
   )
 
-  // Cria um procedimento via API real
+  // Cria um procedimento via API real (Issue #34 - FE-021)
   const createProcedure = useCallback(
     async (data: ProcedurePayload) => {
       setError(null)
       try {
-        const created = await procedureService.createProcedure(data)
+        let clinicId = data.clinicId
+        if (!clinicId) {
+          const clinics = await clinicService.getClinics()
+          if (clinics.length > 0 && clinics[0]?.id) {
+            clinicId = clinics[0].id
+          }
+        }
+        const created = await procedureService.createProcedure({
+          ...data,
+          clinicId,
+        })
         const updated = [created, ...allProcedures]
         setAllProcedures(updated)
         applyFilterAndPagination(updated, search, category, 1)
