@@ -36,9 +36,13 @@ const Login = () => {
     }
   };
 
-  // Placeholder para login com Google
+  // Placeholder para login social (aguardando OAuth no back-end)
   const handleGoogleLogin = () => {
     alert('Login com Google (em breve)');
+  };
+
+  const handleGithubLogin = () => {
+    alert('Login com GitHub (em breve)');
   };
 
   return (
@@ -50,9 +54,10 @@ const Login = () => {
       <div className="auth-form-container">
         {/* Formulário de login */}
         <LoginForm onSubmit={handleSubmit} isLoading={isLoading} error={error} />
-        {/* Botão de login com Google */}
+        {/* Botões de login social */}
         <SocialLoginButtons
           onGoogleClick={handleGoogleLogin}
+          onGithubClick={handleGithubLogin}
           disabled={isLoading}
         />
       </div>
