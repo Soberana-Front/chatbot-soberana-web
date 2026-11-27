@@ -1,5 +1,5 @@
 // Importa ícones de ação
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, DollarSign } from 'lucide-react'
 // Importa o tipo de resumo de clínica (GET /clinics retorna só id, name, city, state)
 import type { ClinicSummary } from '../../../hooks/useClinics'
 import { EmptyState } from '../../ui/EmptyState'
@@ -10,6 +10,7 @@ export interface ClinicTableProps {
   isLoading?: boolean                          // Exibe estado de carregamento
   onEdit: (clinic: ClinicSummary) => void     // Chamado ao clicar no ícone de editar
   onDelete: (clinic: ClinicSummary) => void   // Chamado ao clicar no ícone de excluir
+  onManageCosts?: (clinic: ClinicSummary) => void // Chamado ao clicar no ícone de custos
 }
 
 /**
@@ -22,6 +23,7 @@ export const ClinicTable = ({
   isLoading = false,
   onEdit,
   onDelete,
+  onManageCosts,
 }: ClinicTableProps) => {
   // Estado de carregamento
   if (isLoading) {
@@ -64,14 +66,26 @@ export const ClinicTable = ({
               <td className="clinic-table-td">{clinic.city}</td>
               <td className="clinic-table-td">{clinic.state}</td>
 
-              {/* Ações: editar (lápis) e excluir (lixeira) */}
+              {/* Ações: gerenciar custos (cifrão), editar (lápis) e excluir (lixeira) */}
               <td className="clinic-table-td clinic-table-td-center">
                 <div className="clinic-table-actions">
+                  {onManageCosts && (
+                    <button
+                      type="button"
+                      onClick={() => onManageCosts(clinic)}
+                      className="clinic-table-action-btn text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                      aria-label={`Custos de ${clinic.name}`}
+                      title="Custos operacionais vigentes"
+                    >
+                      <DollarSign className="h-4 w-4" />
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => onEdit(clinic)}
                     className="clinic-table-action-btn clinic-table-action-edit"
                     aria-label={`Editar ${clinic.name}`}
+                    title="Editar dados da clínica"
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
@@ -80,6 +94,7 @@ export const ClinicTable = ({
                     onClick={() => onDelete(clinic)}
                     className="clinic-table-action-btn clinic-table-action-delete"
                     aria-label={`Excluir ${clinic.name}`}
+                    title="Excluir clínica"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>

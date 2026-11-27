@@ -43,6 +43,31 @@ export interface Clinic {
  */
 export type ClinicPayload = Omit<Clinic, 'id'>
 
+/**
+ * Estrutura de custos de uma clínica (vigente e histórico).
+ * Alinhado com ClinicCosts_Create e ClinicCosts_GetCurrent no backend.
+ */
+export interface ClinicCosts {
+  id: string
+  clinicId: string
+  sixMonthFixedCost: number
+  sixMonthVariableCost: number
+  monthlyFixedCost: number
+  monthlyVariableCost: number
+  effectiveHoursPerMonth: number
+  effectiveDate: string
+}
+
+/**
+ * Payload para criação de novo período de custos da clínica.
+ * O backend calcula effectiveDate automaticamente com a data/hora atual.
+ */
+export interface CreateClinicCostsPayload {
+  sixMonthFixedCost: number
+  sixMonthVariableCost: number
+  effectiveHoursPerMonth: number
+}
+
 // Parâmetros de busca enviados no GET /clinics
 export interface GetClinicsParams {
   search?: string
@@ -102,6 +127,39 @@ export const clinicService = {
   // DELETE /clinics/:id — exclui (soft delete) uma clínica
   deleteClinic: async (id: string): Promise<void> => {
     await api.delete(`/clinics/${id}`)
+  },
+
+  // GET /clinics/:clinicId/costs/current — busca o custo vigente da clínica
+  getCurrentCosts: async (clinicId: string): Promise<ClinicCosts | null> => {
+    try {
+      const response = await api.get<ApiResponse<ClinicCosts>>(
+        `/clinics/${encodeURIComponent(clinicId)}/costs/current`
+      )
+      return response.data.data
+    } catch {
+      return null
+    }
+  },
+
+  // GET /clinics/:clinicId/costs/history — busca o histórico de custos da clínica
+  getCostsHistory: async (clinicId: string): Promise<ClinicCosts[]> => {
+    try {
+      const response = await api.get<ApiResponse<ClinicCosts[]>>(
+        `/clinics/${encodeURIComponent(clinicId)}/costs/history`
+      )
+      return response.data.data ?? []
+    } catch {
+      return []
+    }
+  },
+
+  // POST /clinics/:clinicId/costs — cria novo período de custo vigente
+  createCosts: async (clinicId: string, data: CreateClinicCostsPayload): Promise<ClinicCosts> => {
+    const response = await api.post<ApiResponse<ClinicCosts>>(
+      `/clinics/${encodeURIComponent(clinicId)}/costs`,
+      data
+    )
+    return response.data.data
   },
 }
 

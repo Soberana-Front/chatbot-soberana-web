@@ -7,6 +7,7 @@ import { SearchBar } from '../../components/ui/SearchBar'
 import { Pagination } from '../../components/ui/Pagination'
 import { ClinicTable } from '../../components/domain/clinics/ClinicTable'
 import { ClinicModal } from '../../components/domain/clinics/ClinicModal'
+import { ClinicCostsModal } from '../../components/domain/clinics/ClinicCostsModal'
 import { Button } from '../../components/ui/Button'
 import { ErrorState } from '../../components/ui/AsyncStates'
 import { DeleteConfirmation } from '../../components/ui/DeleteConfirmation'
@@ -40,6 +41,14 @@ export const ClinicsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingClinic, setEditingClinic] = useState<ClinicSummary | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Controla a modal de custos operacionais (Issue #31 - FE-018)
+  const [costsClinic, setCostsClinic] = useState<ClinicSummary | null>(null)
+
+  // Abre a modal de custos
+  const handleOpenCostsModal = (clinic: ClinicSummary) => {
+    setCostsClinic(clinic)
+  }
 
   // Abre a modal em modo criação (botão "Cadastrar")
   const handleOpenCreateModal = () => {
@@ -115,6 +124,7 @@ export const ClinicsPage = () => {
           isLoading={isLoading}
           onEdit={handleOpenEditModal}
           onDelete={handleDeleteClick}
+          onManageCosts={handleOpenCostsModal}
         />
 
         {/* Paginação local */}
@@ -132,6 +142,13 @@ export const ClinicsPage = () => {
         clinic={editingClinic}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
+      />
+
+      {/* Modal de custos operacionais (Issue #31 - FE-018) */}
+      <ClinicCostsModal
+        open={Boolean(costsClinic)}
+        onOpenChange={(open) => !open && setCostsClinic(null)}
+        clinic={costsClinic}
       />
 
       {/* Modal de confirmação de exclusão */}
