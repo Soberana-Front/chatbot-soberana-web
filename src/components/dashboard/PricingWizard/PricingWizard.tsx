@@ -13,6 +13,7 @@ import {
 import {
   usePricingWizard,
 } from '../../../hooks/usePricingWizard'
+import { useUnsavedChanges } from '../../../hooks/useUnsavedChanges'
 
 // ========================================
 // ETAPAS DO WIZARD
@@ -81,6 +82,16 @@ export default function PricingWizard() {
     calculatePricing,
   } = usePricingWizard()
 
+  const hasUnsavedChanges =
+    Boolean(selectedClinic || selectedProcedure || chatMessages.length > 0) &&
+    !pricingResult
+
+  const { confirmLeave } = useUnsavedChanges({
+    isDirty: hasUnsavedChanges,
+    message:
+      'Você possui dados preenchidos nesta precificação que ainda não foram salvos. Deseja realmente sair desta etapa?',
+  })
+
   // ========================================
   // NAVEGAÇÃO
   // ========================================
@@ -95,6 +106,10 @@ export default function PricingWizard() {
       return
     }
 
+    if (stepIndex < currentStep && !confirmLeave()) {
+      return
+    }
+
     goToStep(stepIndex)
   }
 
@@ -102,6 +117,10 @@ export default function PricingWizard() {
    * Volta uma etapa.
    */
   const handlePrevious = () => {
+    if (!confirmLeave()) {
+      return
+    }
+
     goToStep(currentStep - 1)
   }
 
