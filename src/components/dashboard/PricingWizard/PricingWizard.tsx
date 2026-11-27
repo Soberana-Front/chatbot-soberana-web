@@ -4,6 +4,8 @@ import ClinicStep from '../ClinicStep/ClinicStep'
 import ProcedureStep from '../ProcedureStep/ProcedureStep'
 import ChatConversation from '../ChatConversation/ChatConversation'
 import PricingResult from '../PricingResult/PricingResult'
+import PrivacyConsentModal from '../PrivacyConsentModal/PrivacyConsentModal'
+import ManualPricingForm from '../ManualPricingForm/ManualPricingForm'
 
 import {
   FormSteps,
@@ -14,6 +16,10 @@ import {
   usePricingWizard,
 } from '../../../hooks/usePricingWizard'
 import { useUnsavedChanges } from '../../../hooks/useUnsavedChanges'
+
+import type {
+  ManualPricingFormData,
+} from '../../../validations/manualPricingSchema'
 
 // ========================================
 // ETAPAS DO WIZARD
@@ -80,6 +86,22 @@ export default function PricingWizard() {
     finishConversation,
 
     calculatePricing,
+
+    // Privacidade (Issue #48).
+    privacyAccepted,
+    acceptPrivacy,
+
+    // Modo manual (Issue #52).
+    isManualMode,
+    switchToManual,
+    switchToChat,
+
+    // Erro e timeout (Issue #53).
+    chatError,
+    isTimedOut,
+    clearError,
+    retryLastMessage,
+    dismissTimeout,
   } = usePricingWizard()
 
   const hasUnsavedChanges =
@@ -180,6 +202,15 @@ export default function PricingWizard() {
     goToStep(3)
   }
 
+  /**
+   * Submissão do formulário manual (Issue #52).
+   * Avança para o resultado com cálculo mockado.
+   */
+  const handleManualSubmit = (_data: ManualPricingFormData) => {
+    calculatePricing()
+    goToStep(3)
+  }
+
   // ========================================
   // ETAPA 4 — RESULTADO
   // ========================================
@@ -261,21 +292,49 @@ export default function PricingWizard() {
         )}
 
         {/* ====================================
-            ETAPA 3 — CONVERSA
+            ETAPA 3 — CONVERSA / MANUAL
             ==================================== */}
 
         {currentStep === 2 && (
-          <ChatConversation
-            messages={chatMessages}
-            onSendMessage={sendMessage}
-            onAddItem={addItem}
-            isTyping={isTyping}
-            isCompleted={isChatCompleted}
-            onFinishConversation={
-              finishConversation
-            }
-            onNext={handleChatNext}
-          />
+          <>
+            {/* Modal de aceite da política (Issue #48) */}
+            {!privacyAccepted && (
+              <PrivacyConsentModal
+                onAccept={acceptPrivacy}
+                onDecline={() => goToStep(1)}
+              />
+            )}
+
+            {/* Modo manual (Issue #52) */}
+            {privacyAccepted && isManualMode && (
+              <ManualPricingForm
+                onSubmit={handleManualSubmit}
+                onBackToChat={switchToChat}
+                isLoading={isLoading}
+              />
+            )}
+
+            {/* Modo chat (padrão) */}
+            {privacyAccepted && !isManualMode && (
+              <ChatConversation
+                messages={chatMessages}
+                onSendMessage={sendMessage}
+                onAddItem={addItem}
+                isTyping={isTyping}
+                isCompleted={isChatCompleted}
+                onFinishConversation={
+                  finishConversation
+                }
+                onNext={handleChatNext}
+                error={chatError}
+                isTimedOut={isTimedOut}
+                onRetry={retryLastMessage}
+                onClearError={clearError}
+                onDismissTimeout={dismissTimeout}
+                onManualFallback={switchToManual}
+              />
+            )}
+          </>
         )}
 
         {/* ====================================

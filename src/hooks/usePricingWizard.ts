@@ -96,6 +96,32 @@ export function usePricingWizard() {
   const [isLoading, setIsLoading] = useState(false)
 
   // ========================================
+  // ACEITE DA POLÍTICA DE PRIVACIDADE (#48)
+  // ========================================
+
+  const [privacyAccepted, setPrivacyAccepted] =
+    useState(false)
+
+  const acceptPrivacy = useCallback(() => {
+    setPrivacyAccepted(true)
+  }, [])
+
+  // ========================================
+  // MODO MANUAL (#52)
+  // ========================================
+
+  const [isManualMode, setIsManualMode] =
+    useState(false)
+
+  const switchToManual = useCallback(() => {
+    setIsManualMode(true)
+  }, [])
+
+  const switchToChat = useCallback(() => {
+    setIsManualMode(false)
+  }, [])
+
+  // ========================================
   // CHAT
   // ========================================
 
@@ -114,6 +140,13 @@ export function usePricingWizard() {
     addItem,
     finishConversation,
     resetChat,
+
+    // Erro e timeout (Issue #53)
+    error: chatError,
+    isTimedOut,
+    clearError,
+    retryLastMessage,
+    dismissTimeout,
   } = usePricingChat()
 
   // ========================================
@@ -249,6 +282,8 @@ export function usePricingWizard() {
     setSelectedProcedure(null)
     setPricingResult(null)
     setIsLoading(false)
+    setPrivacyAccepted(false)
+    setIsManualMode(false)
 
     // Também reinicia a conversa.
     resetChat()
@@ -274,6 +309,22 @@ export function usePricingWizard() {
 
     // Carregamento.
     isLoading,
+
+    // Privacidade (Issue #48).
+    privacyAccepted,
+    acceptPrivacy,
+
+    // Modo manual (Issue #52).
+    isManualMode,
+    switchToManual,
+    switchToChat,
+
+    // Erro e timeout (Issue #53).
+    chatError,
+    isTimedOut,
+    clearError,
+    retryLastMessage,
+    dismissTimeout,
 
     // Navegação.
     nextStep,
