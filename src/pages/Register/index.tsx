@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router';
 import { AuthLayout } from '../../components/layout/AuthLayout';
 import { FormSteps } from '../../components/ui/FormSteps';
 import { PersonalDataSection } from '../../components/forms/PersonalDataSection';
+import { InitialSettingsSection } from '../../components/forms/InitialSettingsSection';
 import { UserTypeSelector, UserType } from '../../components/domain/auth/UserTypeSelector';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -16,10 +17,11 @@ import { useToast } from '../../contexts/ToastContext';
 // Passos do formulário de cadastro
 const steps = [
   { label: 'Dados Pessoais', value: 0 },
-  { label: 'Senha', value: 1 },
+  { label: 'Configurações Iniciais', value: 1 },
+  { label: 'Senha', value: 2 },
 ];
 
-// Página de cadastro com fluxo em 2 passos
+// Página de cadastro com fluxo em 3 passos
 const Register = () => {
   // Hooks de autenticação e toast
   const { register: registerUser } = useAuth();
@@ -39,6 +41,12 @@ const Register = () => {
       phone: '',
       cpf: '',
       userType: null,
+      settings: {
+        currency: 'BRL',
+        profitMargin: 30,
+        taxRate: 15,
+        cardFee: 2,
+      },
       password: '',
       passwordConfirmation: '',
       termsAccepted: false,
@@ -59,15 +67,21 @@ const Register = () => {
 
   // Avança para o próximo passo após validar os campos atuais
   const handleNextStep = async () => {
-    let fieldsToValidate: (keyof RegisterFormData)[] = [];
+    let isValid = false;
 
     if (currentStep === 0) {
-      fieldsToValidate = ['name', 'email', 'phone', 'cpf', 'userType'];
+      isValid = await trigger(['name', 'email', 'phone', 'cpf', 'userType']);
     } else if (currentStep === 1) {
-      fieldsToValidate = ['password', 'passwordConfirmation', 'termsAccepted', 'privacyPolicyAccepted'];
+      isValid = await trigger([
+        'settings.currency',
+        'settings.profitMargin',
+        'settings.taxRate',
+        'settings.cardFee',
+      ]);
+    } else if (currentStep === 2) {
+      isValid = await trigger(['password', 'passwordConfirmation', 'termsAccepted', 'privacyPolicyAccepted']);
     }
 
-    const isValid = await trigger(fieldsToValidate);
     if (isValid) {
       setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
     }
@@ -83,26 +97,22 @@ const Register = () => {
     setIsLoading(true);
     setError(null);
 
-    // Adiciona configurações padrão ao payload
     const payload = {
       ...data,
-      settings: {
-        currency: 'BRL',
-        profitMargin: 30,
-        taxRate: 15,
-        cardFee: 2,
-      },
+      settings: data.settings,
     };
 
-    // Chama serviço de registro e redireciona para login em caso de sucesso
+    // Chama serviço de registro e redireciona para dashboard em caso de sucesso
     registerUser(payload)
-      .then(() => { 
+      .then(() => {
         showToast('Conta criada com sucesso!', 'success');
         navigate('/dashboard');
       })
-      .catch((err: any) => {
-      showToast(err.message || 'Erro ao criar conta. Tente novamente.', 'error');
-})
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : 'Erro ao criar conta. Tente novamente.';
+        setError(message);
+        showToast(message, 'error');
+      })
       .finally(() => {
         setIsLoading(false);
       });
@@ -142,8 +152,15 @@ const Register = () => {
             </div>
           )}
 
-          {/* Passo 2: Senha e Confirmação */}
+          {/* Passo 2: Configurações Iniciais */}
           {currentStep === 1 && (
+            <div className="step-content">
+              <InitialSettingsSection />
+            </div>
+          )}
+
+          {/* Passo 3: Senha e Confirmação */}
+          {currentStep === 2 && (
             <div className="step-content">
               <Input
                 label="Senha"
@@ -198,7 +215,7 @@ const Register = () => {
               </Button>
             ) : (
               <Button type="submit" isLoading={isLoading}>
-                Cadastrar
+                Criar Conta
               </Button>
             )}
           </div>
