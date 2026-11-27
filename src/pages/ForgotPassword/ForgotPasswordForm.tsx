@@ -54,7 +54,7 @@ export const ForgotPasswordForm = ({
 
   return (
     // Formulário com submissão via react-hook-form
-    <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
+    <form onSubmit={handleSubmit(onSubmit)} className="auth-form" noValidate>
       {/* Instrução para o usuário */}
       <p className="form-instruction">
         Digite seu e-mail cadastrado e enviaremos um link para redefinir sua senha.
