@@ -7,5 +7,6 @@ dist
 .vite
 *.md
 !README.md
+!docs/*.md
 # Tipos gerados continuam versionados.
 !src/api/generated/schema.d.ts
