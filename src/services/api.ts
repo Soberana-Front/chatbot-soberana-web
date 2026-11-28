@@ -37,9 +37,11 @@ export const normalizeApiError = (error: unknown): ApiError => {
   const body = error.response?.data as ErrorBody | undefined
   const message = typeof body?.message === 'string' && body.message.trim()
     ? body.message
-    : status === null
-      ? 'Não foi possível conectar à API. Verifique sua conexão.'
-      : 'Não foi possível completar a operação.'
+    : status === 409
+      ? 'Conflito de versão detectado. Os dados foram alterados em outra sessão.'
+      : status === null
+        ? 'Não foi possível conectar à API. Verifique sua conexão.'
+        : 'Não foi possível completar a operação.'
 
   return new ApiError(message, status, fieldErrors(body?.data ?? body?.errors))
 }
